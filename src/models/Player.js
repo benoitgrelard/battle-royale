@@ -3,7 +3,7 @@ import Board from 'src/models/Board';
 import Ship from 'src/models/Ship';
 import Coordinate from 'src/models/Coordinate';
 import { getRandomBoolean } from 'src/lib/helpers';
-import { EVENT_SHOT } from 'src/constants';
+import { EVENT_SHOT, EVENT_PLAYER_ACTIVATION_CHANGED } from 'src/constants';
 
 /**
  * @class Player
@@ -60,10 +60,12 @@ export default class Player extends Model {
 
 	activate () {
 		this.activated = true;
+		this.emit(EVENT_PLAYER_ACTIVATION_CHANGED, this.activated);
 	}
 
 	deactivate () {
 		this.activated = false;
+		this.emit(EVENT_PLAYER_ACTIVATION_CHANGED, this.activated);
 	}
 
 	isActivated () {

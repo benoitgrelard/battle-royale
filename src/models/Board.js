@@ -96,20 +96,27 @@ export default class Board extends Model {
 		let cellContent = this.getAtCoordinate(coordinate);
 		let alreadyHit = this.isCellMissed(coordinate) || (hasShipPart && !cellContent.isIntact());
 
-		if (alreadyHit) { return; }
+		if (alreadyHit) { return false; }
 
-		if (hasShipPart) {
+		let hit = false;
+		let sunk = false;
+		let ship = null;
+
+		if (!hasShipPart) {
+			this.setAtCoordinate(coordinate, CONST_CELL_MISSED);
+		} else {
 			let shipPart = cellContent;
 			shipPart.takeHit();
-			this.emit('hit', coordinate);
-		} else {
-			this.setAtCoordinate(coordinate, CONST_CELL_MISSED);
-			this.emit('missed', coordinate);
+			hit = true;
+			ship = shipPart.getShip();
+			sunk = ship.isSunk();
 		}
 
-		this.emit(EVENT_SHOT, {
-			coordinate: coordinate
-		});
+		let result = { coordinate, hit, sunk, ship };
+
+		this.emit(EVENT_SHOT, result);
+
+		return result;
 	}
 
 }

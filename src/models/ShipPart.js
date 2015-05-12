@@ -12,6 +12,10 @@ export default class ShipPart extends Model {
 		this.state = 1;
 	}
 
+	getShip () {
+		return this.ship;
+	}
+
 	takeHit () {
 		this.state = 0;
 	}
@@ -22,10 +26,6 @@ export default class ShipPart extends Model {
 
 	isHit () {
 		return this.state === 0;
-	}
-
-	isSunk () {
-		return this.ship.isSunk();
 	}
 
 }

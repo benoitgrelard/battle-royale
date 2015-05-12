@@ -7,8 +7,8 @@ import Player from 'src/models/Player';
 export default class Game extends Model {
 
 	constructor (
-		humanPlayer = new Player('Human'),
-		computerPlayer = new Player('Computer')
+		humanPlayer = new Player('Neo'),
+		computerPlayer = new Player('Agent Smith')
 	) {
 		super();
 

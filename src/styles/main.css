@@ -1,18 +1,32 @@
+body {
+	display: flex;
+}
+
+
 .Player {
-	float: left;
 	margin-right: 20px;
 }
+
 
 .Board {
 	display: flex;
 	width: 209px;
 	height: 209px;
+
 	flex-wrap: wrap;
 	justify-content: space-between;
 	align-content: space-between;
 	flex-direction: row;
+
+	opacity: 0.5;
+	pointer-events: none;
+}
+.Board.-playable {
+	opacity: 1;
+	pointer-events: auto;
 }
 .Board.-human { pointer-events: none; }
+
 
 .Board-cell {
 	width: 20px;

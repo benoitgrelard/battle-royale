@@ -31,13 +31,14 @@ export default class AI {
 		let cellsNotTried = this.getFlattenedHitMap().filter(cell => cell.tried === false);
 		let index = getRandomInt(0, cellsNotTried.length - 1);
 		let chosenCell = cellsNotTried[index];
-		chosenCell.tried = true;
 		return chosenCell.coordinate;
 	}
 
-	updateCoordinateResults (coordinate, hit, sunk) {
+	updateHitMapAtCoordinate (coordinate, hit, sunk) {
 		let { x, y } = coordinate;
 		let cell = this.hitMap[x][y];
+
+		cell.tried = true;
 		cell.hit = hit;
 		cell.sunk = sunk;
 	}
@@ -47,3 +48,5 @@ export default class AI {
 	}
 
 }
+
+export const CONST_AI_DELAY = 300;

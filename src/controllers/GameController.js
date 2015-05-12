@@ -1,5 +1,5 @@
 import Coordinate from 'src/models/Coordinate';
-import AI from 'src/lib/AI';
+import AI, { CONST_AI_DELAY } from 'src/lib/AI';
 import { EVENT_SHOOT_REQUESTED, EVENT_SHOT } from 'src/constants';
 
 
@@ -30,6 +30,7 @@ export default class GameController {
 	}
 
 	onPlayerShot (eventName, data, player) {
+		window.console.log(this.getInfoMessage(data, player));
 		let gameOver = this.checkWinner();
 		if (gameOver) { return; }
 
@@ -37,12 +38,18 @@ export default class GameController {
 	}
 
 	giveTurnTo (player) {
+		window.console.log(`${player.name}’s turn!`);
 		this.getOpponent(player).deactivate();
 		player.activate();
 
 		if (this.isComputer(player)) {
 			let coordinate = this.ai.chooseCoordinate();
-			this.model.humanPlayer.takeHit(coordinate);
+
+			setTimeout(() => {
+				let result = this.model.humanPlayer.takeHit(coordinate);
+				let { hit, sunk } = result;
+				this.ai.updateHitMapAtCoordinate(coordinate, hit, sunk);
+			}, CONST_AI_DELAY);
 		}
 	}
 
@@ -62,6 +69,21 @@ export default class GameController {
 		this.model.computerPlayer.deactivate();
 
 		return true;
+	}
+
+	getInfoMessage (data, player) {
+		let { hit, sunk, ship } = data;
+		let { name } = player;
+		let opponentName = this.getOpponent(player).name;
+		let message = '';
+
+		if (hit) {
+			message = `${opponentName} ${sunk ? 'sunk' : hit ? 'hit' : ''} ${name}’s ${ship.name}!`;
+		} else {
+			message = `${opponentName} missed!`;
+		}
+
+		return message;
 	}
 
 	isHuman (player) {

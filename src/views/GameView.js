@@ -1,6 +1,11 @@
 import View from 'src/lib/View';
 import Coordinate from 'src/models/Coordinate';
-import { EVENT_SHOOT_REQUESTED, EVENT_SHOT, CONST_CELL_MISSED } from 'src/constants';
+import {
+	EVENT_SHOOT_REQUESTED,
+	EVENT_SHOT,
+	EVENT_PLAYER_ACTIVATION_CHANGED,
+	CONST_CELL_MISSED
+} from 'src/constants';
 
 /**
  * @class GameView
@@ -14,8 +19,10 @@ export default class GameView extends View {
 		this.delegate('click', '.Board-cell', this.handleBoardCellClicked.bind(this));
 
 		// model events
-		this.model.humanPlayer.on(EVENT_SHOT, this.onHumanPlayerShot.bind(this));
-		this.model.computerPlayer.on(EVENT_SHOT, this.onComputerPlayerShot.bind(this));
+		this.model.humanPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
+		this.model.computerPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
+		this.model.humanPlayer.on(EVENT_PLAYER_ACTIVATION_CHANGED, this.onPlayerActivationChanged.bind(this));
+		this.model.computerPlayer.on(EVENT_PLAYER_ACTIVATION_CHANGED, this.onPlayerActivationChanged.bind(this));
 	}
 
 	handleBoardCellClicked (event) {
@@ -29,11 +36,11 @@ export default class GameView extends View {
 		});
 	}
 
-	onHumanPlayerShot (eventName, data) {
+	onPlayerShot (eventName, data) {
 		this.render();
 	}
 
-	onComputerPlayerShot (eventName, data) {
+	onPlayerActivationChanged (eventName, data) {
 		this.render();
 	}
 
@@ -43,12 +50,12 @@ export default class GameView extends View {
 		let showShips = true;
 
 		let output = `
-			<div class="Player">
+			<div class="Player -human">
 				<h1>${humanPlayer.name}</h1>
 				${this.renderBoard(humanPlayer, showShips)}
 			</div>
 
-			<div class="Player">
+			<div class="Player -computer">
 				<h1>${computerPlayer.name}</h1>
 				${this.renderBoard(computerPlayer)}
 			</div>
@@ -60,9 +67,10 @@ export default class GameView extends View {
 	renderBoard (player, showShips) {
 		let board = player.board;
 		let output = '';
-		let boardClassModifier = player === this.model.humanPlayer ? '-human' : '-computer';
+		let typeModifer = player === this.model.humanPlayer ? '-human' : '-computer';
+		let playableModifier = player.isActivated() ? '' : '-playable';
 
-		output += `<div class="Board ${boardClassModifier}">`;
+		output += `<div class="Board ${typeModifer} ${playableModifier}">`;
 
 		for (let y=0; y<board.grid.length; y++) {
 			for (let x=0; x<board.grid.length; x++) {
@@ -71,14 +79,14 @@ export default class GameView extends View {
 				let classModifier = '';
 				if (hasShipPart) {
 					let shipPart = board.getAtCoordinate(coordinate);
-					if(shipPart.isSunk()) { classModifier += '-sunk'; }
-					else if (shipPart.isHit()) { classModifier += '-hit'; }
-					else if (showShips) { classModifier += '-ship'; }
+					if(shipPart.getShip().isSunk()) { classModifier += ' -sunk'; }
+					else if (shipPart.isHit()) { classModifier += ' -hit'; }
+					else if (showShips) { classModifier += ' -ship'; }
 				} else {
 					let isMissed = board.getAtCoordinate(coordinate) === CONST_CELL_MISSED;
-					if (isMissed) { classModifier += '-missed'; }
+					if (isMissed) { classModifier += ' -missed'; }
 				}
-				output += `<div class="Board-cell ${classModifier}" data-x="${x}" data-y="${y}"></div>`;
+				output += `<div class="Board-cell${classModifier}" data-x="${x}" data-y="${y}"></div>`;
 			}
 			output += '\n';
 		}
