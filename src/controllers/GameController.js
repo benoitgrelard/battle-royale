@@ -19,8 +19,8 @@ export default class GameController {
 		this.view.on(EVENT_SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));
 
 		// model events
-		this.model.humanPlayer.on(EVENT_SHOT, this.onHumanPlayerShot.bind(this));
-		this.model.computerPlayer.on(EVENT_SHOT, this.onComputerPlayerShot.bind(this));
+		this.model.humanPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
+		this.model.computerPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
 	}
 
 	onHumanPlayerRequestedShoot (eventName, data) {
@@ -29,33 +29,25 @@ export default class GameController {
 		this.model.computerPlayer.takeHit(coordinate);
 	}
 
-	onHumanPlayerShot (eventName, data) {
-		this.onPlayerShot(this.model.humanPlayer, eventName, data);
-	}
-
-	onComputerPlayerShot (eventName, data) {
-		this.onPlayerShot(this.model.computerPlayer, eventName, data);
-	}
-
-	onPlayerShot (targetPlayer, eventName, data) {
+	onPlayerShot (eventName, data, player) {
 		let gameOver = this.checkWinner();
 		if (gameOver) { return; }
 
-		this.giveTurnTo(targetPlayer);
+		this.giveTurnTo(player);
 	}
 
 	giveTurnTo (player) {
 		this.getOpponent(player).deactivate();
 		player.activate();
 
-		if (player === this.model.computerPlayer) {
+		if (this.isComputer(player)) {
 			let coordinate = this.ai.chooseCoordinate();
 			this.model.humanPlayer.takeHit(coordinate);
 		}
 	}
 
 	getOpponent (player) {
-		return player === this.model.humanPlayer ? this.model.computerPlayer : this.model.humanPlayer;
+		return this.isHuman(player) ? this.model.computerPlayer : this.model.humanPlayer;
 	}
 
 	checkWinner () {
@@ -70,6 +62,14 @@ export default class GameController {
 		this.model.computerPlayer.deactivate();
 
 		return true;
+	}
+
+	isHuman (player) {
+		return player === this.model.humanPlayer;
+	}
+
+	isComputer (player) {
+		return player === this.model.computerPlayer;
 	}
 
 }

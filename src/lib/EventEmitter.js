@@ -25,7 +25,7 @@ export default class EventEmitter {
 	emit (eventName, data) {
 		this._listeners
 			.filter(listener => listener.name === eventName)
-			.forEach(listener => listener.callback(eventName, data));
+			.forEach(listener => listener.callback(eventName, data, this));
 	}
 
 	proxy (eventName, data) {

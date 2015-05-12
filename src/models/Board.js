@@ -87,11 +87,19 @@ export default class Board extends Model {
 		return this.getAtCoordinate(coordinate) instanceof ShipPart;
 	}
 
+	isCellMissed (coordinate) {
+		return this.getAtCoordinate(coordinate) === CONST_CELL_MISSED;
+	}
+
 	takeHit (coordinate) {
 		let hasShipPart = this.hasShipPartAtCoordinate(coordinate);
+		let cellContent = this.getAtCoordinate(coordinate);
+		let alreadyHit = this.isCellMissed(coordinate) || (hasShipPart && !cellContent.isIntact());
+
+		if (alreadyHit) { return; }
 
 		if (hasShipPart) {
-			let shipPart = this.getAtCoordinate(coordinate);
+			let shipPart = cellContent;
 			shipPart.takeHit();
 			this.emit('hit', coordinate);
 		} else {
