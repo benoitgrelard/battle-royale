@@ -73,12 +73,11 @@ export default class GameController {
 
 	getInfoMessage (data, player) {
 		let { hit, sunk, ship } = data;
-		let { name } = player;
 		let opponentName = this.getOpponent(player).name;
 		let message = '';
 
 		if (hit) {
-			message = `${opponentName} ${sunk ? 'sunk' : hit ? 'hit' : ''} ${name}’s ${ship.name}!`;
+			message = `${opponentName} ${sunk ? 'sunk' : hit ? 'hit' : ''} ${player.name}’s ${ship.name}!`;
 		} else {
 			message = `${opponentName} missed!`;
 		}
