@@ -1,5 +1,6 @@
 import EventEmitter from 'src/lib/EventEmitter';
 
+
 /**
  * @class View
  */
