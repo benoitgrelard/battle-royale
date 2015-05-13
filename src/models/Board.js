@@ -4,6 +4,8 @@ import ShipPart from 'src/models/ShipPart';
 import { CONST_CELL_INIT, CONST_CELL_MISSED, EVENT_SHOT } from 'src/constants';
 
 
+export const DEFAULT_BOARD_SIZE = 10;
+
 /**
  * @class Board
  */
@@ -11,7 +13,7 @@ export default class Board extends Model {
 
 	constructor (attributes) {
 		super(Object.assign({
-			size: 0,
+			size: DEFAULT_BOARD_SIZE,
 			grid: []
 		}, attributes));
 

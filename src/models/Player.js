@@ -1,5 +1,5 @@
 import Model from 'src/lib/Model';
-import Board from 'src/models/Board';
+import Board, { DEFAULT_BOARD_SIZE } from 'src/models/Board';
 import Ship from 'src/models/Ship';
 import Coordinate from 'src/models/Coordinate';
 import { getRandomBoolean } from 'src/lib/helpers';
@@ -14,8 +14,8 @@ export default class Player extends Model {
 	constructor (attributes) {
 		super(Object.assign({
 			name: 'Default Name',
-			boardSize: 10,
-			board: new Board({ size: 10 }),
+			boardSize: DEFAULT_BOARD_SIZE,
+			board: new Board({ size: DEFAULT_BOARD_SIZE }),
 			fleet: [
 				new Ship({ name: 'Aircraft Carrier', size: 5 }),
 				new Ship({ name: 'Battleship', size: 4 }),
