@@ -1,16 +1,17 @@
 import Model from 'src/lib/Model';
 import { getRandomInt } from 'src/lib/helpers';
 
+
 /**
  * @class Coordinate
  */
 export default class Coordinate extends Model {
 
-	constructor (x = 0, y = 0) {
-		super();
-
-		this.x = x;
-		this.y = y;
+	constructor (attributes) {
+		super(Object.assign({
+			x: 0,
+			y: 0
+		}, attributes));
 	}
 
 	toCode () {
@@ -21,14 +22,14 @@ export default class Coordinate extends Model {
 		let x = code.charCodeAt(0) - 65;
 		let y = Number(code[1]) - 1;
 
-		return new Coordinate(x, y);
+		return new Coordinate({ x, y });
 	}
 
 	static random (size) {
 		let x = getRandomInt(0, size - 1);
 		let y = getRandomInt(0, size - 1);
 
-		return new Coordinate(x, y);
+		return new Coordinate({ x, y });
 	}
 
 }

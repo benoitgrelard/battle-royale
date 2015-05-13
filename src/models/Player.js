@@ -3,27 +3,28 @@ import Board from 'src/models/Board';
 import Ship from 'src/models/Ship';
 import Coordinate from 'src/models/Coordinate';
 import { getRandomBoolean } from 'src/lib/helpers';
-import { EVENT_SHOT, EVENT_PLAYER_ACTIVATION_CHANGED } from 'src/constants';
+import { EVENT_SHOT } from 'src/constants';
+
 
 /**
  * @class Player
  */
 export default class Player extends Model {
 
-	constructor (name) {
-		super();
-
-		this.name = name;
-		this.boardSize = 10;
-		this.board = new Board(this.boardSize);
-		this.fleet = [
-			new Ship('Aircraft Carrier', 5),
-			new Ship('Battleship', 4),
-			new Ship('Destroyer', 3),
-			new Ship('Submarine', 3),
-			new Ship('Patrol Boat', 2)
-		];
-		this.activated = false;
+	constructor (attributes) {
+		super(Object.assign({
+			name: 'Default Name',
+			boardSize: 10,
+			board: new Board({ size: 10 }),
+			fleet: [
+				new Ship({ name: 'Aircraft Carrier', size: 5 }),
+				new Ship({ name: 'Battleship', size: 4 }),
+				new Ship({ name: 'Destroyer', size: 3 }),
+				new Ship({ name: 'Submarine', size: 3 }),
+				new Ship({ name: 'Patrol Boat', size: 2 })
+			],
+			activated: false
+		}, attributes));
 
 		this.deployFleet();
 
@@ -54,22 +55,8 @@ export default class Player extends Model {
 	}
 
 	takeHit (coordinate) {
-		if (this.isActivated()) { return; }
+		if (this.activated) { return; }
 		return this.board.takeHit(coordinate);
-	}
-
-	activate () {
-		this.activated = true;
-		this.emit(EVENT_PLAYER_ACTIVATION_CHANGED, this.activated);
-	}
-
-	deactivate () {
-		this.activated = false;
-		this.emit(EVENT_PLAYER_ACTIVATION_CHANGED, this.activated);
-	}
-
-	isActivated () {
-		return this.activated === true;
 	}
 
 }

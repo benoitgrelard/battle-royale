@@ -25,7 +25,7 @@ export default class GameController {
 
 	onHumanPlayerRequestedShoot (eventName, data) {
 		let { x, y } = data.coordinate;
-		let coordinate = new Coordinate(x, y);
+		let coordinate = new Coordinate({ x, y });
 		this.model.computerPlayer.takeHit(coordinate);
 	}
 
@@ -39,8 +39,8 @@ export default class GameController {
 
 	giveTurnTo (player) {
 		window.console.log(`${player.name}’s turn!`);
-		this.getOpponent(player).deactivate();
-		player.activate();
+		this.getOpponent(player).activated = false;
+		player.activated = true;
 
 		if (this.isComputer(player)) {
 			let coordinate = this.ai.chooseCoordinate();
@@ -65,8 +65,8 @@ export default class GameController {
 
 		window.alert((humanPlayerIsSunk ? this.model.computerPlayer : this.model.humanPlayer).name + ' wins!');
 
-		this.model.humanPlayer.deactivate();
-		this.model.computerPlayer.deactivate();
+		this.model.humanPlayer.activated = false;
+		this.model.computerPlayer.activated = false;
 
 		return true;
 	}

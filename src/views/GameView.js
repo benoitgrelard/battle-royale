@@ -3,7 +3,6 @@ import Coordinate from 'src/models/Coordinate';
 import {
 	EVENT_SHOOT_REQUESTED,
 	EVENT_SHOT,
-	EVENT_PLAYER_ACTIVATION_CHANGED,
 	CONST_CELL_MISSED
 } from 'src/constants';
 
@@ -21,26 +20,26 @@ export default class GameView extends View {
 		// model events
 		this.model.humanPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
 		this.model.computerPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
-		this.model.humanPlayer.on(EVENT_PLAYER_ACTIVATION_CHANGED, this.onPlayerActivationChanged.bind(this));
-		this.model.computerPlayer.on(EVENT_PLAYER_ACTIVATION_CHANGED, this.onPlayerActivationChanged.bind(this));
+		this.model.humanPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
+		this.model.computerPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
 	}
 
 	handleBoardCellClicked (event) {
-		if (!this.model.humanPlayer.isActivated()) { return; }
+		if (!this.model.humanPlayer.activated) { return; }
 
 		let cellElement = event.target;
 		let { x, y } = cellElement.dataset;
 
 		this.emit(EVENT_SHOOT_REQUESTED, {
-			coordinate: new Coordinate(x, y)
+			coordinate: new Coordinate({ x, y })
 		});
 	}
 
-	onPlayerShot (eventName, data) {
+	onPlayerShot () {
 		this.render();
 	}
 
-	onPlayerActivationChanged (eventName, data) {
+	onPlayerActivationChanged () {
 		this.render();
 	}
 
@@ -68,13 +67,13 @@ export default class GameView extends View {
 		let board = player.board;
 		let output = '';
 		let typeModifer = player === this.model.humanPlayer ? '-human' : '-computer';
-		let playableModifier = player.isActivated() ? '' : '-playable';
+		let playableModifier = player.activated ? '' : '-playable';
 
 		output += `<div class="Board ${typeModifer} ${playableModifier}">`;
 
 		for (let y=0; y<board.grid.length; y++) {
 			for (let x=0; x<board.grid.length; x++) {
-				let coordinate = new Coordinate(x, y);
+				let coordinate = new Coordinate({ x, y });
 				let hasShipPart = board.hasShipPartAtCoordinate(coordinate);
 				let classModifier = '';
 				if (hasShipPart) {
@@ -88,7 +87,6 @@ export default class GameView extends View {
 				}
 				output += `<div class="Board-cell${classModifier}" data-x="${x}" data-y="${y}"></div>`;
 			}
-			output += '\n';
 		}
 		output += '</div>';
 

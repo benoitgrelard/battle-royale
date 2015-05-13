@@ -3,15 +3,18 @@ import Coordinate from 'src/models/Coordinate';
 import ShipPart from 'src/models/ShipPart';
 import { CONST_CELL_INIT, CONST_CELL_MISSED, EVENT_SHOT } from 'src/constants';
 
+
 /**
  * @class Board
  */
 export default class Board extends Model {
 
-	constructor (size) {
-		super();
+	constructor (attributes) {
+		super(Object.assign({
+			size: 0,
+			grid: []
+		}, attributes));
 
-		this.size = size;
 		this.grid = initGrid(this.size);
 
 		function initGrid(size) {
@@ -33,7 +36,7 @@ export default class Board extends Model {
 
 		if (direction === 'x') {
 			for (let x = xStart, partIndex = 0; x < xStart + ship.size; x++, partIndex++) {
-				let coordinate = new Coordinate(x, yStart);
+				let coordinate = new Coordinate({ x, y: yStart });
 				this.setAtCoordinate(coordinate, ship.getPartAtIndex(partIndex));
 			}
 		}
@@ -42,7 +45,7 @@ export default class Board extends Model {
 			let yEnd = yStart + ship.size;
 			if (yEnd > this.size - 1) { return false; }
 			for (let y = yStart, partIndex = 0; y < yStart + ship.size; y++, partIndex++) {
-				let coordinate = new Coordinate(xStart, y);
+				let coordinate = new Coordinate({ x: xStart, y });
 				this.setAtCoordinate(coordinate, ship.getPartAtIndex(partIndex));
 			}
 		}
@@ -56,7 +59,7 @@ export default class Board extends Model {
 			let xEnd = xStart + ship.size;
 			if (xEnd > this.size - 1) { return false; }
 			for (let x = xStart; x < xEnd; x++) {
-				let coordinate = new Coordinate(x, yStart);
+				let coordinate = new Coordinate({ x, y: yStart });
 				if (this.hasShipPartAtCoordinate(coordinate)) { return false; }
 			}
 		}
@@ -65,7 +68,7 @@ export default class Board extends Model {
 			let yEnd = yStart + ship.size;
 			if (yEnd > this.size - 1) { return false; }
 			for (let y = yStart; y < yEnd; y++) {
-				let coordinate = new Coordinate(xStart, y);
+				let coordinate = new Coordinate({ x: xStart, y });
 				if (this.hasShipPartAtCoordinate(coordinate)) { return false; }
 			}
 		}

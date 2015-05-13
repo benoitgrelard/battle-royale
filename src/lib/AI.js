@@ -16,7 +16,7 @@ export default class AI {
 				hitMap[x] = new Array(size);
 				for (let y=0; y<size; y++) {
 					hitMap[x][y] = {
-						coordinate: new Coordinate(x, y),
+						coordinate: new Coordinate({ x, y }),
 						tried: false,
 						hit: false,
 						sunk: false
