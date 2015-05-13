@@ -9,7 +9,7 @@ export default class Ship extends Model {
 
 	constructor (attributes) {
 		super(Object.assign({
-			name: 'Default Name',
+			name: 'Default Ship Name',
 			size: 0,
 			parts: []
 		}, attributes));

@@ -13,7 +13,7 @@ export default class Player extends Model {
 
 	constructor (attributes) {
 		super(Object.assign({
-			name: 'Default Name',
+			name: 'Default Player Name',
 			boardSize: DEFAULT_BOARD_SIZE,
 			board: new Board({ size: DEFAULT_BOARD_SIZE }),
 			fleet: [

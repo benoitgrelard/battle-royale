@@ -1,6 +1,9 @@
 import Model from 'src/lib/Model';
 
 
+export const HIT = 'HIT';
+export const INTACT = 'INTACT';
+
 /**
  * @class ShipPart
  */
@@ -9,7 +12,7 @@ export default class ShipPart extends Model {
 	constructor (attributes) {
 		super(Object.assign({
 			ship: null,
-			state: 1
+			state: INTACT
 		}, attributes));
 	}
 
@@ -18,15 +21,15 @@ export default class ShipPart extends Model {
 	}
 
 	takeHit () {
-		this.state = 0;
+		this.state = HIT;
 	}
 
 	isIntact () {
-		return this.state === 1;
+		return this.state === INTACT;
 	}
 
 	isHit () {
-		return this.state === 0;
+		return this.state === HIT;
 	}
 
 }
