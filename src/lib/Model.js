@@ -48,6 +48,7 @@ export default class Model extends EventEmitter {
 	}
 
 	_$attributeHasChanged (value, oldValue) {
+		// TODO: will only work for primitives or references
 		return value !== oldValue;
 	}
 
