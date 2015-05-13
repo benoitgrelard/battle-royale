@@ -3,7 +3,7 @@ import Coordinate from 'src/models/Coordinate';
 import {
 	EVENT_SHOOT_REQUESTED,
 	EVENT_SHOT,
-	CONST_CELL_MISSED
+	CELL_MISSED
 } from 'src/constants';
 
 
@@ -83,7 +83,7 @@ export default class GameView extends View {
 					else if (shipPart.isHit()) { classModifier += ' -hit'; }
 					else if (showShips) { classModifier += ' -ship'; }
 				} else {
-					let isMissed = board.getAtCoordinate(coordinate) === CONST_CELL_MISSED;
+					let isMissed = board.getAtCoordinate(coordinate) === CELL_MISSED;
 					if (isMissed) { classModifier += ' -missed'; }
 				}
 				output += `<div class="Board-cell${classModifier}" data-x="${x}" data-y="${y}"></div>`;

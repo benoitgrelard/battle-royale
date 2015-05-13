@@ -1,7 +1,7 @@
 import Model from 'src/lib/Model';
 import Coordinate from 'src/models/Coordinate';
 import ShipPart from 'src/models/ShipPart';
-import { CONST_CELL_INIT, CONST_CELL_MISSED, EVENT_SHOT } from 'src/constants';
+import { CELL_INIT, CELL_MISSED, EVENT_SHOT } from 'src/constants';
 
 
 export const DEFAULT_BOARD_SIZE = 10;
@@ -24,7 +24,7 @@ export default class Board extends Model {
 			for (let x=0; x<size; x++) {
 				grid[x] = new Array(size);
 				for (let y=0; y<size; y++) {
-					grid[x][y] = CONST_CELL_INIT;
+					grid[x][y] = CELL_INIT;
 				}
 			}
 			return grid;
@@ -93,7 +93,7 @@ export default class Board extends Model {
 	}
 
 	isCellMissed (coordinate) {
-		return this.getAtCoordinate(coordinate) === CONST_CELL_MISSED;
+		return this.getAtCoordinate(coordinate) === CELL_MISSED;
 	}
 
 	takeHit (coordinate) {
@@ -108,7 +108,7 @@ export default class Board extends Model {
 		let ship = null;
 
 		if (!hasShipPart) {
-			this.setAtCoordinate(coordinate, CONST_CELL_MISSED);
+			this.setAtCoordinate(coordinate, CELL_MISSED);
 		} else {
 			let shipPart = cellContent;
 			shipPart.takeHit();
