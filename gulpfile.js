@@ -1,107 +1,141 @@
+/* jshint node: true */
+
+var assign = require('lodash.assign');
 var babelify = require('babelify');
-// var buffer = require('vinyl-buffer');
 var browserify = require('browserify');
 var browserSync = require('browser-sync');
+var del = require('del');
+var ghpages = require('gh-pages');
 var gulp = require('gulp');
+var jshint = require('gulp-jshint');
+var path = require('path');
+var util = require('gulp-util');
+var reload = browserSync.reload;
 var source = require('vinyl-source-stream');
-// var watch = require('gulp-watch');
-// var watchify = require('watchify');
+var watchify = require('watchify');
 
 
 
-gulp.task('default', ['html', 'css', 'js', 'serve', 'watch']);
+/**
+ * CONFIG
+ * ============================================================================
+ */
+var sourcePath = './src/';
+var distPath = './dist/';
 
+
+/**
+ * MAIN TASKS
+ * ============================================================================
+ */
+gulp.task('default', ['dev']);
+gulp.task('dev', ['lint', 'clean', 'html', 'css', 'serve', 'watch']);
+gulp.task('build', ['lint', 'clean', 'html', 'css', 'js']);
+gulp.task('deploy', ['build', 'deploy-gh-pages']);
+
+
+/**
+ * SUB-TASKS
+ * ============================================================================
+ */
+gulp.task('clean', function() {
+	'use strict';
+	return del(distPath + '**');
+});
+
+gulp.task('lint', function() {
+	'use strict';
+	return gulp.src(['gulpfile.js', sourcePath + '**/*.js'])
+			   .pipe(jshint())
+			   .pipe(jshint.reporter('default'));
+});
 
 gulp.task('html', function() {
 	'use strict';
-	gulp.src('src/index.html', { base: 'src' })
-		.pipe(gulp.dest('dist'));
+	return gulp.src(sourcePath + 'index.html')
+			   .pipe(gulp.dest(distPath));
 });
 
 
 gulp.task('css', function() {
 	'use strict';
-	gulp.src('src/styles/main.css', { base: 'src/styles/' })
-		.pipe(gulp.dest('dist'));
+	return gulp.src(sourcePath + 'styles/main.css')
+			   .pipe(gulp.dest(distPath));
 });
 
 
 gulp.task('js', function() {
 	'use strict';
-	browserify({
-		entries: 'src/main.js',
-		debug: true
-	})
-	.transform(babelify)
-	.bundle()
-	.pipe(source('app.js'))
-	.pipe(gulp.dest('dist'));
+	var options = {
+		entries: [sourcePath + 'main.js'],
+		debug: false
+	};
+
+	return browserify(options)
+			.transform(babelify)
+			.bundle()
+			.pipe(source('app.js'))
+			.pipe(gulp.dest(distPath));
 });
 
 
 gulp.task('serve', function() {
 	'use strict';
-	browserSync({
-		server: {
-			baseDir: 'dist',
-			open: true
-		}
-	});
-});
-
-gulp.task('reload', function() {
-	'use strict';
-	browserSync.reload();
+	return browserSync({
+			server: {
+				baseDir: distPath,
+				open: true
+			}
+		});
 });
 
 gulp.task('watch', function() {
 	'use strict';
-	gulp.watch('src/**/*.js', ['js', 'reload']);
-});
 
+	watchHtml();
+	watchCss();
+	watchJs();
 
-/*gulp.task('browserify', function() {
-	bundle(false);
-});
+	function watchHtml() {
+		gulp.watch('index.html', { cwd: sourcePath }, ['html', reload]);
+	}
 
-gulp.task('watch', function() {
-	bundle(true);
-});
+	function watchCss() {
+		gulp.watch('styles/main.css', { cwd: sourcePath }, ['css', function() {
+			reload(distPath + 'main.css');
+		}]);
+	}
 
-function bundle(watch) {
-	var bundler;
+	function watchJs() {
+		var options = {
+			entries: [sourcePath + 'main.js'],
+			debug: true
+		};
+		options = assign({}, watchify.args, options);
+		var bundler = watchify(browserify(options));
 
-	if (watch) {
-		bundler = watchify(browserify('src/main.js', watchify.args));
 		bundler
-			.on('update', function() {
-				console.log('update!');
-				rebundle(bundler);
-			})
-			.on('log', function(e) {
-				console.log(e);
-			});
-	} else {
-		bundler = browserify('src/main.js', { debug: true });
+			.transform(babelify)
+			.on('update', bundle)
+			.on('log', util.log);
+
+		return bundle();
+
+		function bundle() {
+			return bundler
+				.bundle()
+				.on('error', util.log.bind(util, 'Browserify Error'))
+				.pipe(source('app.js'))
+				.pipe(gulp.dest(distPath))
+				.pipe(reload({
+					stream: true,
+					once: true
+				}));
+		}
 	}
+});
 
-	bundler
-		.transform(babelify)
-		.require('src/main.js', { entry: true });
-
-
-	function rebundle(bundler) {
-		return bundler.bundle()
-			.on('error', function(e) {
-				console.log('browserify error', e.message);
-			})
-			.pipe(source('app.js'))
-			.pipe(buffer())
-			.pile(gulp.dest('dist'))
-			.pipe(browserSync.reload({
-				stream: true,
-				once: true
-			}));
-	}
-
-}*/
+gulp.task('deploy-gh-pages', function(cb) {
+	'use strict';
+	return ghpages.publish(path.join(process.cwd(), distPath), cb);
+});
