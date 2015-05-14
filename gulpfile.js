@@ -38,16 +38,16 @@ gulp.task('deploy', ['build', 'deploy-gh-pages']);
  * SUB-TASKS
  * ============================================================================
  */
-gulp.task('clean', function() {
-	'use strict';
-	return del(distPath + '**');
-});
-
 gulp.task('lint', function() {
 	'use strict';
 	return gulp.src(['gulpfile.js', sourcePath + '**/*.js'])
 			   .pipe(jshint())
 			   .pipe(jshint.reporter('default'));
+});
+
+gulp.task('clean', function() {
+	'use strict';
+	return del(distPath + '**');
 });
 
 gulp.task('html', function() {
@@ -89,7 +89,7 @@ gulp.task('serve', function() {
 		});
 });
 
-gulp.task('watch', function() {
+gulp.task('watch', ['serve'], function() {
 	'use strict';
 
 	watchHtml();
@@ -135,7 +135,7 @@ gulp.task('watch', function() {
 	}
 });
 
-gulp.task('deploy-gh-pages', function(cb) {
+gulp.task('deploy-gh-pages', ['build'], function(cb) {
 	'use strict';
 	return ghpages.publish(path.join(process.cwd(), distPath), cb);
 });
