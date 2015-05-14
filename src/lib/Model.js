@@ -1,4 +1,4 @@
-import EventEmitter from 'src/lib/EventEmitter';
+import EventEmitter from './EventEmitter';
 
 
 /**

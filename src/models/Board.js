@@ -1,7 +1,7 @@
-import Model from 'src/lib/Model';
-import Coordinate from 'src/models/Coordinate';
-import ShipPart from 'src/models/ShipPart';
-import { CELL_INIT, CELL_MISSED, EVENT_SHOT } from 'src/constants';
+import Model from '../lib/Model';
+import Coordinate from './Coordinate';
+import ShipPart from './ShipPart';
+import { CELL_INIT, CELL_MISSED, EVENT_SHOT } from '../constants';
 
 
 export const DEFAULT_BOARD_SIZE = 10;

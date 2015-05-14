@@ -1,10 +1,10 @@
-import View from 'src/lib/View';
-import Coordinate from 'src/models/Coordinate';
+import View from '../lib/View';
+import Coordinate from '../models/Coordinate';
 import {
 	EVENT_SHOOT_REQUESTED,
 	EVENT_SHOT,
 	CELL_MISSED
-} from 'src/constants';
+} from '../constants';
 
 
 /**

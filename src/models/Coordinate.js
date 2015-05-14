@@ -1,5 +1,5 @@
-import Model from 'src/lib/Model';
-import { getRandomInt } from 'src/lib/helpers';
+import Model from '../lib/Model';
+import { getRandomInt } from '../lib/helpers';
 
 
 /**

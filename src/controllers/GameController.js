@@ -1,6 +1,6 @@
-import Coordinate from 'src/models/Coordinate';
-import AI, { CONST_AI_DELAY } from 'src/lib/AI';
-import { EVENT_SHOOT_REQUESTED, EVENT_SHOT } from 'src/constants';
+import Coordinate from '../models/Coordinate';
+import AI, { CONST_AI_DELAY } from '../lib/AI';
+import { EVENT_SHOOT_REQUESTED, EVENT_SHOT } from '../constants';
 
 
 /**

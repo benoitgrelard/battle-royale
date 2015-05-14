@@ -1,4 +1,4 @@
-import Model from 'src/lib/Model';
+import Model from '../lib/Model';
 
 
 export const HIT = 'HIT';

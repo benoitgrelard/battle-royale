@@ -63,6 +63,6 @@
 	"yui": false,
 
 	"globals": {
-		"System": false
+		"require": false
 	}
 }

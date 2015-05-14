@@ -1,5 +1,5 @@
-import Coordinate from 'src/models/Coordinate';
-import { getRandomInt } from 'src/lib/helpers';
+import Coordinate from '../models/Coordinate';
+import { getRandomInt } from './helpers';
 
 
 /**

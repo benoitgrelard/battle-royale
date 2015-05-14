@@ -1,5 +1,5 @@
-import Model from 'src/lib/Model';
-import ShipPart from 'src/models/ShipPart';
+import Model from '../lib/Model';
+import ShipPart from './ShipPart';
 
 
 /**

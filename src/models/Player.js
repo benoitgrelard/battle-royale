@@ -1,9 +1,9 @@
-import Model from 'src/lib/Model';
-import Board, { DEFAULT_BOARD_SIZE } from 'src/models/Board';
-import Ship from 'src/models/Ship';
-import Coordinate from 'src/models/Coordinate';
-import { getRandomBoolean } from 'src/lib/helpers';
-import { EVENT_SHOT } from 'src/constants';
+import Model from '../lib/Model';
+import Board, { DEFAULT_BOARD_SIZE } from './Board';
+import Ship from './Ship';
+import Coordinate from './Coordinate';
+import { getRandomBoolean } from '../lib/helpers';
+import { EVENT_SHOT } from '../constants';
 
 
 /**

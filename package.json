@@ -1,13 +1,13 @@
 {
-  "scripts": {
-    "dev": "babel src/main.js -m system -s -w -o app.js"
-  },
-  "jspm": {
-    "directories": {},
-    "devDependencies": {
-      "babel": "npm:babel-core@^5.1.13",
-      "babel-runtime": "npm:babel-runtime@^5.1.13",
-      "core-js": "npm:core-js@^0.9.4"
-    }
+  "devDependencies": {
+    "babelify": "^6.1.0",
+    "browser-sync": "^2.7.1",
+    "browserify": "^10.1.3",
+    "gulp": "^3.8.11",
+    "gulp-babel": "^5.1.0",
+    "gulp-watch": "^4.2.4",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.2.1"
   }
 }

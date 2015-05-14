@@ -1,6 +1,6 @@
-import Model from 'src/lib/Model';
-import Player from 'src/models/Player';
-import { DEFAULT_BOARD_SIZE } from 'src/models/Board';
+import Model from '../lib/Model';
+import Player from './Player';
+import { DEFAULT_BOARD_SIZE } from './Board';
 
 
 /**
