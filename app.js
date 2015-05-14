@@ -1834,40 +1834,40 @@ var $        = require('./$')
   , $def     = require('./$.def')
   , isObject = $.isObject
   , toObject = $.toObject;
-function wrapObjectMethod(METHOD, MODE){
-  var fn  = ($.core.Object || {})[METHOD] || Object[METHOD]
-    , f   = 0
-    , o   = {};
-  o[METHOD] = MODE == 1 ? function(it){
+$.each.call(('freeze,seal,preventExtensions,isFrozen,isSealed,isExtensible,' +
+  'getOwnPropertyDescriptor,getPrototypeOf,keys,getOwnPropertyNames').split(',')
+, function(KEY, ID){
+  var fn     = ($.core.Object || {})[KEY] || Object[KEY]
+    , forced = 0
+    , method = {};
+  method[KEY] = ID == 0 ? function freeze(it){
     return isObject(it) ? fn(it) : it;
-  } : MODE == 2 ? function(it){
+  } : ID == 1 ? function seal(it){
+    return isObject(it) ? fn(it) : it;
+  } : ID == 2 ? function preventExtensions(it){
+    return isObject(it) ? fn(it) : it;
+  } : ID == 3 ? function isFrozen(it){
     return isObject(it) ? fn(it) : true;
-  } : MODE == 3 ? function(it){
+  } : ID == 4 ? function isSealed(it){
+    return isObject(it) ? fn(it) : true;
+  } : ID == 5 ? function isExtensible(it){
     return isObject(it) ? fn(it) : false;
-  } : MODE == 4 ? function getOwnPropertyDescriptor(it, key){
+  } : ID == 6 ? function getOwnPropertyDescriptor(it, key){
     return fn(toObject(it), key);
-  } : MODE == 5 ? function getPrototypeOf(it){
+  } : ID == 7 ? function getPrototypeOf(it){
     return fn(Object($.assertDefined(it)));
-  } : function(it){
+  } : ID == 8 ? function keys(it){
+    return fn(toObject(it));
+  } : function getOwnPropertyNames(it){
     return fn(toObject(it));
   };
   try {
     fn('z');
   } catch(e){
-    f = 1;
+    forced = 1;
   }
-  $def($def.S + $def.F * f, 'Object', o);
-}
-wrapObjectMethod('freeze', 1);
-wrapObjectMethod('seal', 1);
-wrapObjectMethod('preventExtensions', 1);
-wrapObjectMethod('isFrozen', 2);
-wrapObjectMethod('isSealed', 2);
-wrapObjectMethod('isExtensible', 3);
-wrapObjectMethod('getOwnPropertyDescriptor', 4);
-wrapObjectMethod('getPrototypeOf', 5);
-wrapObjectMethod('keys');
-wrapObjectMethod('getOwnPropertyNames');
+  $def($def.S + $def.F * forced, 'Object', method);
+});
 },{"./$":23,"./$.def":13}],57:[function(require,module,exports){
 'use strict';
 // 19.1.3.6 Object.prototype.toString()
@@ -2466,6 +2466,7 @@ var $        = require('./$')
   , setter   = false
   , TAG      = uid('tag')
   , HIDDEN   = uid('hidden')
+  , _propertyIsEnumerable = {}.propertyIsEnumerable
   , SymbolRegistry = {}
   , AllSymbols = {}
   , useNative = $.isFunction($Symbol);
@@ -2489,7 +2490,7 @@ function defineProperty(it, key, D){
       it[HIDDEN][key] = true;
     } else {
       if(has(it, HIDDEN) && it[HIDDEN][key])it[HIDDEN][key] = false;
-      D.enumerable = false;
+      D = $create(D, {enumerable: desc(0, false)});
     }
   } return setDesc(it, key, D);
 }
@@ -2504,6 +2505,11 @@ function defineProperties(it, P){
 }
 function create(it, P){
   return P === undefined ? $create(it) : defineProperties($create(it), P);
+}
+function propertyIsEnumerable(key){
+  var E = _propertyIsEnumerable.call(this, key);
+  return E || !has(this, key) || !has(AllSymbols, key) || has(this, HIDDEN) && this[HIDDEN][key]
+    ? E : true;
 }
 function getOwnPropertyDescriptor(it, key){
   var D = getDesc(it = toObject(it), key);
@@ -2543,6 +2549,8 @@ if(!useNative){
   $.setDescs   = defineProperties;
   $.getNames   = getOwnPropertyNames;
   $.getSymbols = getOwnPropertySymbols;
+
+  if($.DESC && $.FW)$.hide(Object.prototype, 'propertyIsEnumerable', propertyIsEnumerable);
 }
 
 var symbolStatics = {
@@ -3369,15 +3377,15 @@ module.exports = require('./modules/$').core;
       } else if (record.type === "normal" && afterLoc) {
         this.next = afterLoc;
       }
-
-      return ContinueSentinel;
     },
 
     finish: function(finallyLoc) {
       for (var i = this.tryEntries.length - 1; i >= 0; --i) {
         var entry = this.tryEntries[i];
         if (entry.finallyLoc === finallyLoc) {
-          return this.complete(entry.completion, entry.afterLoc);
+          this.complete(entry.completion, entry.afterLoc);
+          resetTryEntry(entry);
+          return ContinueSentinel;
         }
       }
     },
