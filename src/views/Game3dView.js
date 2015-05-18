@@ -7,7 +7,7 @@ import Coordinate from '../models/Coordinate';
 const CELL_SIZE = 1;
 const CELL_HEIGHT = 0.1;
 const CELL_GAP = 0.5;
-const SHIP_PART_SIZE = 0.5;
+const SHIP_PART_SIZE = 0.75;
 
 /**
  * @class  Game3dView
@@ -34,7 +34,7 @@ export default class Game3dView extends View {
 
 	getGeometries () {
 		let cellGeometry = new THREE.BoxGeometry(CELL_SIZE, CELL_HEIGHT, CELL_SIZE);
-		let shipPartGeometry = new THREE.BoxGeometry(SHIP_PART_SIZE, SHIP_PART_SIZE, SHIP_PART_SIZE);
+		let shipPartGeometry = new THREE.SphereGeometry(SHIP_PART_SIZE/2);
 
 		return {
 			cellGeometry,
@@ -44,7 +44,7 @@ export default class Game3dView extends View {
 
 	getMaterials () {
 		let cellMaterial = new THREE.MeshLambertMaterial({
-			color: 0x009aff,
+			color: 0xffffff,
 			wireframe: false,
 			shading: THREE.FlatShading
 		});
@@ -92,6 +92,7 @@ export default class Game3dView extends View {
 
 		renderer.shadowMapEnabled = true;
 		renderer.shadowMapType = THREE.PCFShadowMap;
+		// renderer.setClearColor(0xffffff);
 
 		renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -105,23 +106,34 @@ export default class Game3dView extends View {
 	}
 
 	getLights () {
-		let ambientLight = new THREE.AmbientLight(0x202020);
+		let skyLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.25);
+		// skyLight.color.setHSL(0.6, 1, 0.6);
+		// skyLight.groundColor.setHSL(0.095, 1, 0.75);
+		skyLight.position.set(0, 500, 0);
 
-		let spotLight = new THREE.SpotLight(0xffffff);
-		spotLight.position.set(8, 15, 15);
-		spotLight.shadowCameraNear = 10;
-		spotLight.shadowCameraFar = 50;
-		spotLight.shadowCameraFov = 75;
+		let spotLight = new THREE.SpotLight(0xffffff, 0.75);
+		spotLight.position.set(10, 10, 10);
 		spotLight.castShadow = true;
-		spotLight.shadowDarkness = 0.5;
+		spotLight.shadowDarkness = 0.75;
+		spotLight.shadowCameraNear = 10;
+		spotLight.shadowCameraFar = 100;
+		spotLight.shadowCameraFov = 45;
 		spotLight.shadowMapWidth = 2048;
 		spotLight.shadowMapHeight = 2048;
 		spotLight.shadowBias = 0.001;
 		// spotLight.shadowCameraVisible = true;
 
+		let spotLight2 = new THREE.SpotLight(0xff0000, 0.5);
+		spotLight2.position.set(-10, 2, 10);
+
+		let spotLight3 = new THREE.SpotLight(0x0000ff, 0.5);
+		spotLight3.position.set(10, 2, -10);
+
 		return [
-			ambientLight,
-			spotLight
+			skyLight,
+			spotLight,
+			spotLight2,
+			spotLight3
 		];
 	}
 
