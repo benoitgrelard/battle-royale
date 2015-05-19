@@ -19,10 +19,10 @@ export default class GameView extends View {
 		this.delegate('click', '.Board-cell', this.handleBoardCellClicked.bind(this));
 
 		// model events
-		this.model.humanPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
-		this.model.computerPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
-		this.model.humanPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
-		this.model.computerPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
+		this.model.humanPlayer.on(EVENT_SHOT, () => this.render());
+		this.model.computerPlayer.on(EVENT_SHOT, () => this.render());
+		this.model.humanPlayer.on('changed:activated', () => this.render());
+		this.model.computerPlayer.on('changed:activated', () => this.render());
 	}
 
 	handleBoardCellClicked (event) {
@@ -34,14 +34,6 @@ export default class GameView extends View {
 		this.emit(EVENT_SHOOT_REQUESTED, {
 			coordinate: new Coordinate({ x, y })
 		});
-	}
-
-	onPlayerShot () {
-		this.render();
-	}
-
-	onPlayerActivationChanged () {
-		this.render();
 	}
 
 	render () {
