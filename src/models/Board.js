@@ -78,6 +78,22 @@ export default class Board extends Model {
 		return true;
 	}
 
+	getAllShipPartCoordinates (ship) {
+		let shipPartCoordinates = [];
+		for (let y=0; y<this.size; y++) {
+			for (let x=0; x<this.size; x++) {
+				let coordinate = new Coordinate({ x, y });
+				if (this.hasShipPartAtCoordinate(coordinate)) {
+					let shipPart = this.getAtCoordinate(coordinate);
+					if (shipPart.getShip().name === ship.name) {
+						shipPartCoordinates.push({ x, y });
+					}
+				}
+			}
+		}
+		return shipPartCoordinates;
+	}
+
 	getAtCoordinate (coordinate) {
 		let { x, y } = coordinate;
 		return this.grid[x][y];
