@@ -34,7 +34,7 @@ export default class GameController {
 		let gameOver = this.checkWinner();
 		if (gameOver) { return; }
 
-		this.giveTurnTo(player);
+		setTimeout(() => this.giveTurnTo(player), CONST_AI_DELAY);
 	}
 
 	giveTurnTo (player) {

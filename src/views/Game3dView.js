@@ -2,6 +2,10 @@ import View from '../lib/View';
 import THREE from 'three';
 import orbitControls from 'three-orbit-controls';
 import Coordinate from '../models/Coordinate';
+import {
+	EVENT_SHOOT_REQUESTED,
+	EVENT_SHOT
+} from '../constants';
 
 
 const CELL_SIZE = 1;
@@ -16,10 +20,7 @@ export default class Game3dView extends View {
 
 	constructor (model, element) {
 		super(model, element);
-		this.initialize();
-	}
 
-	initialize () {
 		this.geometries = this.getGeometries();
 		this.materials = this.getMaterials();
 		this.scene = this.getScene(this.geometries, this.materials);
@@ -27,14 +28,99 @@ export default class Game3dView extends View {
 		this.controls = this.getControls(this.camera);
 		this.renderer = this.getRenderer(this.camera);
 
+		// kick-off rendering
 		this.rootElement.appendChild(this.renderer.domElement);
-
 		this.render();
+
+		this.addEventListeners();
+	}
+
+	addEventListeners () {
+		// view events
+		this.rootElement.addEventListener('click', this.handleViewClicked.bind(this));
+
+		// model events
+		this.model.humanPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
+		this.model.computerPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
+		this.model.humanPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
+		this.model.computerPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
+	}
+
+	handleViewClicked (event) {
+		if (!this.model.humanPlayer.activated) { return; }
+
+		let mouseVector = new THREE.Vector2();
+		let raycaster = new THREE.Raycaster();
+
+		mouseVector.x = 2 * (event.clientX / window.innerWidth) - 1;
+		mouseVector.y = 1 - 2 * ( event.clientY / window.innerHeight );
+
+		raycaster.setFromCamera(mouseVector, this.camera);
+
+		let cellWrappers = this.board.children;
+		let intersects = raycaster.intersectObjects(cellWrappers, true);
+		let cells = intersects
+			.filter(intersection => intersection.object.name === 'cell--computer')
+			.map(cellIntersection => cellIntersection.object);
+
+		if (cells.length === 0) { return; }
+
+		let { x, y } = cells[0].userData;
+
+		this.emit(EVENT_SHOOT_REQUESTED, {
+			coordinate: new Coordinate({ x, y })
+		});
+	}
+
+	onPlayerShot (eventName, data, player) {
+		let { coordinate, hit, sunk, ship } = data;
+		let missed = !hit;
+		let cellWrapper = this.getCellWrapperAtCoordinate(coordinate);
+
+		if (missed) {
+			let cell = cellWrapper.getObjectByName(`cell--${this.getPlayerType(player)}`);
+			cell.material = this.materials.cellMaterialMissed;
+		}
+
+		if (hit) {
+			let shipPart = cellWrapper.getObjectByName(`shipPart--${this.getPlayerType(player)}`);
+			shipPart.material = this.materials.shipPartMaterialHit;
+			if (player === this.model.computerPlayer) {
+				shipPart.visible = true;
+			}
+		}
+
+		if (sunk) {
+			let shipPartCoordinates = player.board.getAllShipPartCoordinates(ship);
+			shipPartCoordinates.forEach(coordinate => {
+				let cellWrapper = this.getCellWrapperAtCoordinate(coordinate);
+				let shipPart = cellWrapper.getObjectByName(`shipPart--${this.getPlayerType(player)}`);
+				shipPart.material = this.materials.shipPartMaterialSunk;
+				shipPart.visible = true;
+			});
+		}
+	}
+
+	onPlayerActivationChanged (eventName, data, player) {
+		let isActive = data.newValue === true;
+		if (!isActive) { return; }
+
+		let cellWrappers = this.board.children;
+		cellWrappers.forEach(cellWrapper => {
+			cellWrapper.rotation.x = player === this.model.humanPlayer ? Math.PI : 0;
+		});
+	}
+
+	getCellWrapperAtCoordinate (coordinate) {
+		return this.board.children.filter(cellWrapper => {
+			return cellWrapper.userData.x === coordinate.x && cellWrapper.userData.y === coordinate.y;
+		})[0];
 	}
 
 	getGeometries () {
-		let cellGeometry = new THREE.BoxGeometry(CELL_SIZE, CELL_HEIGHT, CELL_SIZE);
-		let shipPartGeometry = new THREE.SphereGeometry(SHIP_PART_SIZE/2);
+		let cellGeometry = new THREE.BoxGeometry(CELL_SIZE, CELL_HEIGHT/2, CELL_SIZE);
+		let shipPartGeometry = new THREE.IcosahedronGeometry(SHIP_PART_SIZE/2, 0);
+		shipPartGeometry.computeBoundingBox();
 
 		return {
 			cellGeometry,
@@ -43,39 +129,66 @@ export default class Game3dView extends View {
 	}
 
 	getMaterials () {
-		let cellMaterial = new THREE.MeshLambertMaterial({
-			color: 0xffffff,
+		let cellMaterialDefault = new THREE.MeshLambertMaterial({
+			color: 0xeeeeee,
 			wireframe: false,
 			shading: THREE.FlatShading
 		});
 
-		let shipPartMaterial = new THREE.MeshLambertMaterial({
-			color: 0xffffff,
+		let cellMaterialMissed = new THREE.MeshLambertMaterial({
+			color: 'blue',
+			wireframe: false,
+			shading: THREE.FlatShading
+		});
+
+		let shipPartMaterialDefault = new THREE.MeshLambertMaterial({
+			color: 0x999999,
+			wireframe: false,
+			shading: THREE.FlatShading
+		});
+
+		let shipPartMaterialHit = new THREE.MeshLambertMaterial({
+			color: 'red',
+			wireframe: false,
+			shading: THREE.FlatShading
+		});
+
+		let shipPartMaterialSunk = new THREE.MeshLambertMaterial({
+			color: 'black',
 			wireframe: false,
 			shading: THREE.FlatShading
 		});
 
 		return {
-			cellMaterial,
-			shipPartMaterial
+			cellMaterialDefault,
+			cellMaterialMissed,
+			shipPartMaterialDefault,
+			shipPartMaterialHit,
+			shipPartMaterialSunk
 		};
 	}
 
 	getScene (geometries, materials) {
 		let scene = new THREE.Scene();
 
-		let lights = this.getLights();
-		scene.add(...lights);
+		this.lights = this.getLights();
+		scene.add(...this.lights);
 
-		let board = this.getBoard(geometries, materials);
-		scene.add(board);
+		this.board = this.getBoard(geometries, materials);
+		scene.add(this.board);
+
+		this.addPlayerShipsToBoard(this.board, this.model.humanPlayer, geometries, materials);
+		this.addPlayerShipsToBoard(this.board, this.model.computerPlayer, geometries, materials);
+
+		scene.add(new THREE.AxisHelper());
 
 		return scene;
 	}
 
 	getCamera () {
 		let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-		camera.position.z = 10;
+		camera.position.z = 20;
+		camera.position.y = 20;
 
 		return camera;
 	}
@@ -88,11 +201,11 @@ export default class Game3dView extends View {
 	getRenderer (camera) {
 		let renderer = new THREE.WebGLRenderer({
 			antialias: false,
+			alpha: true
 		});
 
 		renderer.shadowMapEnabled = true;
 		renderer.shadowMapType = THREE.PCFShadowMap;
-		// renderer.setClearColor(0xffffff);
 
 		renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -106,13 +219,13 @@ export default class Game3dView extends View {
 	}
 
 	getLights () {
-		let skyLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.25);
+		let skyLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.15);
 		// skyLight.color.setHSL(0.6, 1, 0.6);
 		// skyLight.groundColor.setHSL(0.095, 1, 0.75);
 		skyLight.position.set(0, 500, 0);
 
-		let spotLight = new THREE.SpotLight(0xffffff, 0.75);
-		spotLight.position.set(10, 10, 10);
+		let spotLight = new THREE.SpotLight(0xffffff, 0.65);
+		spotLight.position.set(30, 30, 10);
 		spotLight.castShadow = true;
 		spotLight.shadowDarkness = 0.75;
 		spotLight.shadowCameraNear = 10;
@@ -131,51 +244,79 @@ export default class Game3dView extends View {
 
 		return [
 			skyLight,
-			spotLight,
-			spotLight2,
-			spotLight3
+			spotLight
+			// spotLight2,
+			// spotLight3
 		];
 	}
 
 	getBoard (geometries, materials) {
 		const BOARD_SIZE = (this.model.boardSize * CELL_SIZE) + ((this.model.boardSize - 1) * CELL_GAP);
 
-		let board = new THREE.Object3D();
+		let board = new THREE.Group();
 		board.name = 'board';
 
 		for (let y=0; y<this.model.boardSize; y++) {
 			for (let x=0; x<this.model.boardSize; x++) {
 
-				let coordinate = new Coordinate({ x, y });
-				let hasShipPart = this.model.humanPlayer.board.hasShipPartAtCoordinate(coordinate);
+				let cellWrapper = new THREE.Group();
+				cellWrapper.name = 'cellWrapper';
+				cellWrapper.userData = { x, y };
 
-				let cell = new THREE.Object3D();
-				cell.name = 'cellContainer';
-				let cellMesh = new THREE.Mesh(geometries.cellGeometry, materials.cellMaterial);
-				cellMesh.name = 'cell';
-				cellMesh.receiveShadow = true;
+				let cellHuman = new THREE.Mesh(geometries.cellGeometry, materials.cellMaterialDefault);
+				cellHuman.name = 'cell--human';
+				cellHuman.userData = { x, y };
+				cellHuman.receiveShadow = true;
 
-				if (hasShipPart) {
-					let shipPartMesh = new THREE.Mesh(geometries.shipPartGeometry, materials.shipPartMaterial);
-					shipPartMesh.name = 'shipPart';
-					shipPartMesh.castShadow = true;
-					shipPartMesh.translateY((SHIP_PART_SIZE + CELL_HEIGHT) / 2);
-					cell.add(shipPartMesh);
-				}
+				let cellComputer = cellHuman.clone();
+				cellComputer.name = 'cell--computer';
 
-				cell.add(cellMesh);
+				cellWrapper.add(cellHuman);
+				cellWrapper.add(cellComputer);
 
-				cell.translateX(x * (CELL_SIZE + CELL_GAP));
-				cell.translateZ(y * (CELL_SIZE + CELL_GAP));
+				cellHuman.translateY(CELL_HEIGHT/4);
+				cellComputer.translateY(-CELL_HEIGHT/4);
 
-				board.add(cell);
+				let initialOffset = CELL_SIZE/2;
+				let incrementOffset = CELL_SIZE + CELL_GAP;
+				let centerInBoardOffset = -BOARD_SIZE/2;
+
+				cellWrapper.translateX(initialOffset + x * incrementOffset + centerInBoardOffset);
+				cellWrapper.translateZ(initialOffset + y * incrementOffset + centerInBoardOffset);
+
+				board.add(cellWrapper);
 			}
 		}
 
-		board.translateX(-BOARD_SIZE/2);
-		board.translateZ(-BOARD_SIZE/2);
-
 		return board;
+	}
+
+	addPlayerShipsToBoard (board, player, geometries, materials) {
+		board.children.forEach(cellWrapper => {
+
+			let { x, y } = cellWrapper.userData;
+			let coordinate = new Coordinate({ x, y });
+			let hasShipPart = player.board.hasShipPartAtCoordinate(coordinate);
+			let side = player === this.model.humanPlayer ? 1 : -1;
+
+			if (hasShipPart) {
+				let shipPart = new THREE.Mesh(geometries.shipPartGeometry, materials.shipPartMaterialDefault);
+				shipPart.name = `shipPart--${this.getPlayerType(player)}`;
+				shipPart.castShadow = true;
+				shipPart.translateY(side * (geometries.shipPartGeometry.boundingBox.size().y + CELL_HEIGHT) / 2);
+
+				if (player === this.model.computerPlayer) {
+					shipPart.visible = false;
+				}
+
+				cellWrapper.add(shipPart);
+			}
+
+		});
+	}
+
+	getPlayerType (player) {
+		return player === this.model.humanPlayer ? 'human': 'computer';
 	}
 
 	render () {
