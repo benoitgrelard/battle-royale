@@ -37,6 +37,7 @@ export default class Game3dView extends View {
 
 	addEventListeners () {
 		// view events
+		this.rootElement.addEventListener('mousemove', this.handleMouseMovedOverView.bind(this));
 		this.rootElement.addEventListener('click', this.handleViewClicked.bind(this));
 
 		// model events
@@ -46,9 +47,29 @@ export default class Game3dView extends View {
 		this.model.computerPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
 	}
 
+	handleMouseMovedOverView (event) {
+		if (!this.model.humanPlayer.activated) { return; }
+
+		let cells = this.getIntersectedComputerCellsFromEvent(event);
+
+		this.rootElement.style.cursor = cells.length ? 'pointer' : 'default';
+	}
+
 	handleViewClicked (event) {
 		if (!this.model.humanPlayer.activated) { return; }
 
+		let cells = this.getIntersectedComputerCellsFromEvent(event);
+
+		if (cells.length === 0) { return; }
+
+		let { x, y } = cells[0].userData;
+
+		this.emit(EVENT_SHOOT_REQUESTED, {
+			coordinate: new Coordinate({ x, y })
+		});
+	}
+
+	getIntersectedComputerCellsFromEvent (event) {
 		let mouseVector = new THREE.Vector2();
 		let raycaster = new THREE.Raycaster();
 
@@ -63,13 +84,7 @@ export default class Game3dView extends View {
 			.filter(intersection => intersection.object.name === 'cell--computer')
 			.map(cellIntersection => cellIntersection.object);
 
-		if (cells.length === 0) { return; }
-
-		let { x, y } = cells[0].userData;
-
-		this.emit(EVENT_SHOOT_REQUESTED, {
-			coordinate: new Coordinate({ x, y })
-		});
+		return cells;
 	}
 
 	onPlayerShot (eventName, data, player) {
