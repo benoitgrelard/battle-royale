@@ -1,6 +1,6 @@
 import Coordinate from '../models/Coordinate';
 import AI, { CONST_AI_DELAY } from '../lib/AI';
-import { EVENT_SHOOT_REQUESTED, EVENT_SHOT } from '../constants';
+import { VIEW_EVENT__SHOOT_REQUESTED, MODEL_EVENT__SHOT, VIEW_EVENT__SHOT_COMPLETED } from '../constants';
 
 
 /**
@@ -13,14 +13,16 @@ export default class GameController {
 		this.view = view;
 		this.ai = new AI(this.model.boardSize);
 
-		this.giveTurnTo(this.model.humanPlayer);
+		// delay initial turn
+		setTimeout(() => this.giveTurnTo(this.model.humanPlayer), 2000);
 
 		// view events
-		this.view.on(EVENT_SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));
+		this.view.on(VIEW_EVENT__SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));
+		this.view.on(VIEW_EVENT__SHOT_COMPLETED, this.onPlayerShotCompleted.bind(this));
 
 		// model events
-		this.model.humanPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
-		this.model.computerPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
+		this.model.humanPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
+		this.model.computerPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 	}
 
 	onHumanPlayerRequestedShoot (eventName, data) {
@@ -33,8 +35,10 @@ export default class GameController {
 		window.console.log(this.getInfoMessage(data, player));
 		let gameOver = this.checkWinner();
 		if (gameOver) { return; }
+	}
 
-		setTimeout(() => this.giveTurnTo(player), CONST_AI_DELAY);
+	onPlayerShotCompleted (eventName, data) {
+		this.giveTurnTo(data.player);
 	}
 
 	giveTurnTo (player) {

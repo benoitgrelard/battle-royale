@@ -1,7 +1,7 @@
 import Model from '../lib/Model';
 import Coordinate from './Coordinate';
 import ShipPart from './ShipPart';
-import { CELL_INIT, CELL_MISSED, EVENT_SHOT } from '../constants';
+import { CELL_INIT, CELL_MISSED, MODEL_EVENT__SHOT } from '../constants';
 
 
 export const DEFAULT_BOARD_SIZE = 10;
@@ -135,7 +135,7 @@ export default class Board extends Model {
 
 		let result = { coordinate, hit, sunk, ship };
 
-		this.emit(EVENT_SHOT, result);
+		this.emit(MODEL_EVENT__SHOT, result);
 
 		return result;
 	}

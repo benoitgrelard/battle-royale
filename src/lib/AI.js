@@ -50,4 +50,4 @@ export default class AI {
 
 }
 
-export const CONST_AI_DELAY = 300;
+export const CONST_AI_DELAY = 1000;

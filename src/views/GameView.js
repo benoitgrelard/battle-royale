@@ -1,8 +1,9 @@
 import View from '../lib/View';
 import Coordinate from '../models/Coordinate';
 import {
-	EVENT_SHOOT_REQUESTED,
-	EVENT_SHOT,
+	VIEW_EVENT__SHOOT_REQUESTED,
+	MODEL_EVENT__SHOT,
+	VIEW_EVENT__SHOT_COMPLETED,
 	CELL_MISSED
 } from '../constants';
 
@@ -19,8 +20,8 @@ export default class GameView extends View {
 		this.delegate('click', '.Board-cell', this.handleBoardCellClicked.bind(this));
 
 		// model events
-		this.model.humanPlayer.on(EVENT_SHOT, () => this.render());
-		this.model.computerPlayer.on(EVENT_SHOT, () => this.render());
+		this.model.humanPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
+		this.model.computerPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 		this.model.humanPlayer.on('changed:activated', () => this.render());
 		this.model.computerPlayer.on('changed:activated', () => this.render());
 	}
@@ -31,8 +32,15 @@ export default class GameView extends View {
 		let cellElement = event.target;
 		let { x, y } = cellElement.dataset;
 
-		this.emit(EVENT_SHOOT_REQUESTED, {
+		this.emit(VIEW_EVENT__SHOOT_REQUESTED, {
 			coordinate: new Coordinate({ x, y })
+		});
+	}
+
+	onPlayerShot (eventName, data, player) {
+		this.render();
+		this.emit(VIEW_EVENT__SHOT_COMPLETED, {
+			player
 		});
 	}
 

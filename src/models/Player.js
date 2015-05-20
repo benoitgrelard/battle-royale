@@ -3,7 +3,7 @@ import Board, { DEFAULT_BOARD_SIZE } from './Board';
 import Ship from './Ship';
 import Coordinate from './Coordinate';
 import { getRandomBoolean } from '../lib/helpers';
-import { EVENT_SHOT } from '../constants';
+import { MODEL_EVENT__SHOT } from '../constants';
 
 
 /**
@@ -28,8 +28,8 @@ export default class Player extends Model {
 
 		this.deployFleet();
 
-		// proxy `EVENT_SHOT` events from board
-		this.board.on(EVENT_SHOT, this.proxy.bind(this));
+		// proxy `MODEL_EVENT__SHOT` events from board
+		this.board.on(MODEL_EVENT__SHOT, this.proxy.bind(this));
 	}
 
 	deployFleet () {

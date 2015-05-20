@@ -1,6 +1,7 @@
 // events
-export const EVENT_SHOOT_REQUESTED = 'EVENT_SHOOT_REQUESTED';
-export const EVENT_SHOT = 'EVENT_SHOT';
+export const VIEW_EVENT__SHOOT_REQUESTED = 'VIEW_EVENT__SHOOT_REQUESTED';
+export const VIEW_EVENT__SHOT_COMPLETED = 'VIEW_EVENT__SHOT_COMPLETED';
+export const MODEL_EVENT__SHOT = 'MODEL_EVENT__SHOT';
 
 // constants
 export const CELL_INIT = 'CELL_INIT';

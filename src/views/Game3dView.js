@@ -3,8 +3,9 @@ import THREE from 'three';
 import orbitControls from 'three-orbit-controls';
 import Coordinate from '../models/Coordinate';
 import {
-	EVENT_SHOOT_REQUESTED,
-	EVENT_SHOT
+	VIEW_EVENT__SHOOT_REQUESTED,
+	MODEL_EVENT__SHOT,
+	VIEW_EVENT__SHOT_COMPLETED
 } from '../constants';
 
 
@@ -41,8 +42,8 @@ export default class Game3dView extends View {
 		this.rootElement.addEventListener('click', this.handleViewClicked.bind(this));
 
 		// model events
-		this.model.humanPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
-		this.model.computerPlayer.on(EVENT_SHOT, this.onPlayerShot.bind(this));
+		this.model.humanPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
+		this.model.computerPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 		this.model.humanPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
 		this.model.computerPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
 	}
@@ -64,7 +65,7 @@ export default class Game3dView extends View {
 
 		let { x, y } = cells[0].userData;
 
-		this.emit(EVENT_SHOOT_REQUESTED, {
+		this.emit(VIEW_EVENT__SHOOT_REQUESTED, {
 			coordinate: new Coordinate({ x, y })
 		});
 	}
@@ -114,12 +115,27 @@ export default class Game3dView extends View {
 				shipPart.visible = true;
 			});
 		}
+
+		let hitAnimationDuration = 2000;
+		setTimeout(() => {
+			this.emit(VIEW_EVENT__SHOT_COMPLETED, {
+				player
+			});
+		}, hitAnimationDuration);
 	}
 
 	onPlayerActivationChanged (eventName, data, player) {
 		let isActive = data.newValue === true;
 		if (!isActive) { return; }
 
+		this.onPlayerActivated(player);
+	}
+
+	onPlayerActivated (player) {
+		this.revealBoard(player);
+	}
+
+	revealBoard (player) {
 		let cellWrappers = this.board.children;
 		cellWrappers.forEach(cellWrapper => {
 			cellWrapper.rotation.x = player === this.model.humanPlayer ? Math.PI : 0;
