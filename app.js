@@ -35,7 +35,7 @@ window.game3dView = game3dView;
 // window.gameController1 = gameController1;
 window.gameController2 = gameController2;
 
-},{"./controllers/GameController":93,"./lib/helpers":98,"./models/Game":101,"./views/Game3dView":105,"./views/GameView":106,"babelify/polyfill":89}],2:[function(require,module,exports){
+},{"./controllers/GameController":94,"./lib/helpers":99,"./models/Game":102,"./views/Game3dView":106,"./views/GameView":107,"babelify/polyfill":89}],2:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -39273,24 +39273,786 @@ if (typeof exports !== 'undefined') {
 }
 
 },{}],92:[function(require,module,exports){
+/**
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/sole/tween.js
+ * ----------------------------------------------
+ *
+ * See https://github.com/sole/tween.js/graphs/contributors for the full list of contributors.
+ * Thank you all, you're awesome!
+ */
+
+// Date.now shim for (ahem) Internet Explo(d|r)er
+if ( Date.now === undefined ) {
+
+	Date.now = function () {
+
+		return new Date().valueOf();
+
+	};
+
+}
+
+var TWEEN = TWEEN || ( function () {
+
+	var _tweens = [];
+
+	return {
+
+		REVISION: '14',
+
+		getAll: function () {
+
+			return _tweens;
+
+		},
+
+		removeAll: function () {
+
+			_tweens = [];
+
+		},
+
+		add: function ( tween ) {
+
+			_tweens.push( tween );
+
+		},
+
+		remove: function ( tween ) {
+
+			var i = _tweens.indexOf( tween );
+
+			if ( i !== -1 ) {
+
+				_tweens.splice( i, 1 );
+
+			}
+
+		},
+
+		update: function ( time ) {
+
+			if ( _tweens.length === 0 ) return false;
+
+			var i = 0;
+
+			time = time !== undefined ? time : ( typeof window !== 'undefined' && window.performance !== undefined && window.performance.now !== undefined ? window.performance.now() : Date.now() );
+
+			while ( i < _tweens.length ) {
+
+				if ( _tweens[ i ].update( time ) ) {
+
+					i++;
+
+				} else {
+
+					_tweens.splice( i, 1 );
+
+				}
+
+			}
+
+			return true;
+
+		}
+	};
+
+} )();
+
+TWEEN.Tween = function ( object ) {
+
+	var _object = object;
+	var _valuesStart = {};
+	var _valuesEnd = {};
+	var _valuesStartRepeat = {};
+	var _duration = 1000;
+	var _repeat = 0;
+	var _yoyo = false;
+	var _isPlaying = false;
+	var _reversed = false;
+	var _delayTime = 0;
+	var _startTime = null;
+	var _easingFunction = TWEEN.Easing.Linear.None;
+	var _interpolationFunction = TWEEN.Interpolation.Linear;
+	var _chainedTweens = [];
+	var _onStartCallback = null;
+	var _onStartCallbackFired = false;
+	var _onUpdateCallback = null;
+	var _onCompleteCallback = null;
+	var _onStopCallback = null;
+
+	// Set all starting values present on the target object
+	for ( var field in object ) {
+
+		_valuesStart[ field ] = parseFloat(object[field], 10);
+
+	}
+
+	this.to = function ( properties, duration ) {
+
+		if ( duration !== undefined ) {
+
+			_duration = duration;
+
+		}
+
+		_valuesEnd = properties;
+
+		return this;
+
+	};
+
+	this.start = function ( time ) {
+
+		TWEEN.add( this );
+
+		_isPlaying = true;
+
+		_onStartCallbackFired = false;
+
+		_startTime = time !== undefined ? time : ( typeof window !== 'undefined' && window.performance !== undefined && window.performance.now !== undefined ? window.performance.now() : Date.now() );
+		_startTime += _delayTime;
+
+		for ( var property in _valuesEnd ) {
+
+			// check if an Array was provided as property value
+			if ( _valuesEnd[ property ] instanceof Array ) {
+
+				if ( _valuesEnd[ property ].length === 0 ) {
+
+					continue;
+
+				}
+
+				// create a local copy of the Array with the start value at the front
+				_valuesEnd[ property ] = [ _object[ property ] ].concat( _valuesEnd[ property ] );
+
+			}
+
+			_valuesStart[ property ] = _object[ property ];
+
+			if( ( _valuesStart[ property ] instanceof Array ) === false ) {
+				_valuesStart[ property ] *= 1.0; // Ensures we're using numbers, not strings
+			}
+
+			_valuesStartRepeat[ property ] = _valuesStart[ property ] || 0;
+
+		}
+
+		return this;
+
+	};
+
+	this.stop = function () {
+
+		if ( !_isPlaying ) {
+			return this;
+		}
+
+		TWEEN.remove( this );
+		_isPlaying = false;
+
+		if ( _onStopCallback !== null ) {
+
+			_onStopCallback.call( _object );
+
+		}
+
+		this.stopChainedTweens();
+		return this;
+
+	};
+
+	this.stopChainedTweens = function () {
+
+		for ( var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i++ ) {
+
+			_chainedTweens[ i ].stop();
+
+		}
+
+	};
+
+	this.delay = function ( amount ) {
+
+		_delayTime = amount;
+		return this;
+
+	};
+
+	this.repeat = function ( times ) {
+
+		_repeat = times;
+		return this;
+
+	};
+
+	this.yoyo = function( yoyo ) {
+
+		_yoyo = yoyo;
+		return this;
+
+	};
+
+
+	this.easing = function ( easing ) {
+
+		_easingFunction = easing;
+		return this;
+
+	};
+
+	this.interpolation = function ( interpolation ) {
+
+		_interpolationFunction = interpolation;
+		return this;
+
+	};
+
+	this.chain = function () {
+
+		_chainedTweens = arguments;
+		return this;
+
+	};
+
+	this.onStart = function ( callback ) {
+
+		_onStartCallback = callback;
+		return this;
+
+	};
+
+	this.onUpdate = function ( callback ) {
+
+		_onUpdateCallback = callback;
+		return this;
+
+	};
+
+	this.onComplete = function ( callback ) {
+
+		_onCompleteCallback = callback;
+		return this;
+
+	};
+
+	this.onStop = function ( callback ) {
+
+		_onStopCallback = callback;
+		return this;
+
+	};
+
+	this.update = function ( time ) {
+
+		var property;
+
+		if ( time < _startTime ) {
+
+			return true;
+
+		}
+
+		if ( _onStartCallbackFired === false ) {
+
+			if ( _onStartCallback !== null ) {
+
+				_onStartCallback.call( _object );
+
+			}
+
+			_onStartCallbackFired = true;
+
+		}
+
+		var elapsed = ( time - _startTime ) / _duration;
+		elapsed = elapsed > 1 ? 1 : elapsed;
+
+		var value = _easingFunction( elapsed );
+
+		for ( property in _valuesEnd ) {
+
+			var start = _valuesStart[ property ] || 0;
+			var end = _valuesEnd[ property ];
+
+			if ( end instanceof Array ) {
+
+				_object[ property ] = _interpolationFunction( end, value );
+
+			} else {
+
+				// Parses relative end values with start as base (e.g.: +10, -3)
+				if ( typeof(end) === "string" ) {
+					end = start + parseFloat(end, 10);
+				}
+
+				// protect against non numeric properties.
+				if ( typeof(end) === "number" ) {
+					_object[ property ] = start + ( end - start ) * value;
+				}
+
+			}
+
+		}
+
+		if ( _onUpdateCallback !== null ) {
+
+			_onUpdateCallback.call( _object, value );
+
+		}
+
+		if ( elapsed == 1 ) {
+
+			if ( _repeat > 0 ) {
+
+				if( isFinite( _repeat ) ) {
+					_repeat--;
+				}
+
+				// reassign starting values, restart by making startTime = now
+				for( property in _valuesStartRepeat ) {
+
+					if ( typeof( _valuesEnd[ property ] ) === "string" ) {
+						_valuesStartRepeat[ property ] = _valuesStartRepeat[ property ] + parseFloat(_valuesEnd[ property ], 10);
+					}
+
+					if (_yoyo) {
+						var tmp = _valuesStartRepeat[ property ];
+						_valuesStartRepeat[ property ] = _valuesEnd[ property ];
+						_valuesEnd[ property ] = tmp;
+					}
+
+					_valuesStart[ property ] = _valuesStartRepeat[ property ];
+
+				}
+
+				if (_yoyo) {
+					_reversed = !_reversed;
+				}
+
+				_startTime = time + _delayTime;
+
+				return true;
+
+			} else {
+
+				if ( _onCompleteCallback !== null ) {
+
+					_onCompleteCallback.call( _object );
+
+				}
+
+				for ( var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i++ ) {
+
+					_chainedTweens[ i ].start( time );
+
+				}
+
+				return false;
+
+			}
+
+		}
+
+		return true;
+
+	};
+
+};
+
+
+TWEEN.Easing = {
+
+	Linear: {
+
+		None: function ( k ) {
+
+			return k;
+
+		}
+
+	},
+
+	Quadratic: {
+
+		In: function ( k ) {
+
+			return k * k;
+
+		},
+
+		Out: function ( k ) {
+
+			return k * ( 2 - k );
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1 ) return 0.5 * k * k;
+			return - 0.5 * ( --k * ( k - 2 ) - 1 );
+
+		}
+
+	},
+
+	Cubic: {
+
+		In: function ( k ) {
+
+			return k * k * k;
+
+		},
+
+		Out: function ( k ) {
+
+			return --k * k * k + 1;
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k;
+			return 0.5 * ( ( k -= 2 ) * k * k + 2 );
+
+		}
+
+	},
+
+	Quartic: {
+
+		In: function ( k ) {
+
+			return k * k * k * k;
+
+		},
+
+		Out: function ( k ) {
+
+			return 1 - ( --k * k * k * k );
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1) return 0.5 * k * k * k * k;
+			return - 0.5 * ( ( k -= 2 ) * k * k * k - 2 );
+
+		}
+
+	},
+
+	Quintic: {
+
+		In: function ( k ) {
+
+			return k * k * k * k * k;
+
+		},
+
+		Out: function ( k ) {
+
+			return --k * k * k * k * k + 1;
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k * k * k;
+			return 0.5 * ( ( k -= 2 ) * k * k * k * k + 2 );
+
+		}
+
+	},
+
+	Sinusoidal: {
+
+		In: function ( k ) {
+
+			return 1 - Math.cos( k * Math.PI / 2 );
+
+		},
+
+		Out: function ( k ) {
+
+			return Math.sin( k * Math.PI / 2 );
+
+		},
+
+		InOut: function ( k ) {
+
+			return 0.5 * ( 1 - Math.cos( Math.PI * k ) );
+
+		}
+
+	},
+
+	Exponential: {
+
+		In: function ( k ) {
+
+			return k === 0 ? 0 : Math.pow( 1024, k - 1 );
+
+		},
+
+		Out: function ( k ) {
+
+			return k === 1 ? 1 : 1 - Math.pow( 2, - 10 * k );
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( k === 0 ) return 0;
+			if ( k === 1 ) return 1;
+			if ( ( k *= 2 ) < 1 ) return 0.5 * Math.pow( 1024, k - 1 );
+			return 0.5 * ( - Math.pow( 2, - 10 * ( k - 1 ) ) + 2 );
+
+		}
+
+	},
+
+	Circular: {
+
+		In: function ( k ) {
+
+			return 1 - Math.sqrt( 1 - k * k );
+
+		},
+
+		Out: function ( k ) {
+
+			return Math.sqrt( 1 - ( --k * k ) );
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1) return - 0.5 * ( Math.sqrt( 1 - k * k) - 1);
+			return 0.5 * ( Math.sqrt( 1 - ( k -= 2) * k) + 1);
+
+		}
+
+	},
+
+	Elastic: {
+
+		In: function ( k ) {
+
+			var s, a = 0.1, p = 0.4;
+			if ( k === 0 ) return 0;
+			if ( k === 1 ) return 1;
+			if ( !a || a < 1 ) { a = 1; s = p / 4; }
+			else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+			return - ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
+
+		},
+
+		Out: function ( k ) {
+
+			var s, a = 0.1, p = 0.4;
+			if ( k === 0 ) return 0;
+			if ( k === 1 ) return 1;
+			if ( !a || a < 1 ) { a = 1; s = p / 4; }
+			else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+			return ( a * Math.pow( 2, - 10 * k) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) + 1 );
+
+		},
+
+		InOut: function ( k ) {
+
+			var s, a = 0.1, p = 0.4;
+			if ( k === 0 ) return 0;
+			if ( k === 1 ) return 1;
+			if ( !a || a < 1 ) { a = 1; s = p / 4; }
+			else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+			if ( ( k *= 2 ) < 1 ) return - 0.5 * ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
+			return a * Math.pow( 2, -10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) * 0.5 + 1;
+
+		}
+
+	},
+
+	Back: {
+
+		In: function ( k ) {
+
+			var s = 1.70158;
+			return k * k * ( ( s + 1 ) * k - s );
+
+		},
+
+		Out: function ( k ) {
+
+			var s = 1.70158;
+			return --k * k * ( ( s + 1 ) * k + s ) + 1;
+
+		},
+
+		InOut: function ( k ) {
+
+			var s = 1.70158 * 1.525;
+			if ( ( k *= 2 ) < 1 ) return 0.5 * ( k * k * ( ( s + 1 ) * k - s ) );
+			return 0.5 * ( ( k -= 2 ) * k * ( ( s + 1 ) * k + s ) + 2 );
+
+		}
+
+	},
+
+	Bounce: {
+
+		In: function ( k ) {
+
+			return 1 - TWEEN.Easing.Bounce.Out( 1 - k );
+
+		},
+
+		Out: function ( k ) {
+
+			if ( k < ( 1 / 2.75 ) ) {
+
+				return 7.5625 * k * k;
+
+			} else if ( k < ( 2 / 2.75 ) ) {
+
+				return 7.5625 * ( k -= ( 1.5 / 2.75 ) ) * k + 0.75;
+
+			} else if ( k < ( 2.5 / 2.75 ) ) {
+
+				return 7.5625 * ( k -= ( 2.25 / 2.75 ) ) * k + 0.9375;
+
+			} else {
+
+				return 7.5625 * ( k -= ( 2.625 / 2.75 ) ) * k + 0.984375;
+
+			}
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( k < 0.5 ) return TWEEN.Easing.Bounce.In( k * 2 ) * 0.5;
+			return TWEEN.Easing.Bounce.Out( k * 2 - 1 ) * 0.5 + 0.5;
+
+		}
+
+	}
+
+};
+
+TWEEN.Interpolation = {
+
+	Linear: function ( v, k ) {
+
+		var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = TWEEN.Interpolation.Utils.Linear;
+
+		if ( k < 0 ) return fn( v[ 0 ], v[ 1 ], f );
+		if ( k > 1 ) return fn( v[ m ], v[ m - 1 ], m - f );
+
+		return fn( v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i );
+
+	},
+
+	Bezier: function ( v, k ) {
+
+		var b = 0, n = v.length - 1, pw = Math.pow, bn = TWEEN.Interpolation.Utils.Bernstein, i;
+
+		for ( i = 0; i <= n; i++ ) {
+			b += pw( 1 - k, n - i ) * pw( k, i ) * v[ i ] * bn( n, i );
+		}
+
+		return b;
+
+	},
+
+	CatmullRom: function ( v, k ) {
+
+		var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = TWEEN.Interpolation.Utils.CatmullRom;
+
+		if ( v[ 0 ] === v[ m ] ) {
+
+			if ( k < 0 ) i = Math.floor( f = m * ( 1 + k ) );
+
+			return fn( v[ ( i - 1 + m ) % m ], v[ i ], v[ ( i + 1 ) % m ], v[ ( i + 2 ) % m ], f - i );
+
+		} else {
+
+			if ( k < 0 ) return v[ 0 ] - ( fn( v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f ) - v[ 0 ] );
+			if ( k > 1 ) return v[ m ] - ( fn( v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m ) - v[ m ] );
+
+			return fn( v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i );
+
+		}
+
+	},
+
+	Utils: {
+
+		Linear: function ( p0, p1, t ) {
+
+			return ( p1 - p0 ) * t + p0;
+
+		},
+
+		Bernstein: function ( n , i ) {
+
+			var fc = TWEEN.Interpolation.Utils.Factorial;
+			return fc( n ) / fc( i ) / fc( n - i );
+
+		},
+
+		Factorial: ( function () {
+
+			var a = [ 1 ];
+
+			return function ( n ) {
+
+				var s = 1, i;
+				if ( a[ n ] ) return a[ n ];
+				for ( i = n; i > 1; i-- ) s *= i;
+				return a[ n ] = s;
+
+			};
+
+		} )(),
+
+		CatmullRom: function ( p0, p1, p2, p3, t ) {
+
+			var v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
+			return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
+
+		}
+
+	}
+
+};
+
+module.exports=TWEEN;
+},{}],93:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
 // events
-var EVENT_SHOOT_REQUESTED = 'EVENT_SHOOT_REQUESTED';
-exports.EVENT_SHOOT_REQUESTED = EVENT_SHOOT_REQUESTED;
-var EVENT_SHOT = 'EVENT_SHOT';
+var VIEW_EVENT__SHOOT_REQUESTED = 'VIEW_EVENT__SHOOT_REQUESTED';
+exports.VIEW_EVENT__SHOOT_REQUESTED = VIEW_EVENT__SHOOT_REQUESTED;
+var VIEW_EVENT__SHOT_COMPLETED = 'VIEW_EVENT__SHOT_COMPLETED';
+exports.VIEW_EVENT__SHOT_COMPLETED = VIEW_EVENT__SHOT_COMPLETED;
+var VIEW_EVENT__BOARD_READY = 'VIEW_EVENT__BOARD_READY';
+exports.VIEW_EVENT__BOARD_READY = VIEW_EVENT__BOARD_READY;
+var MODEL_EVENT__SHOT = 'MODEL_EVENT__SHOT';
 
-exports.EVENT_SHOT = EVENT_SHOT;
+exports.MODEL_EVENT__SHOT = MODEL_EVENT__SHOT;
 // constants
 var CELL_INIT = 'CELL_INIT';
 exports.CELL_INIT = CELL_INIT;
 var CELL_MISSED = 'CELL_MISSED';
 exports.CELL_MISSED = CELL_MISSED;
 
-},{}],93:[function(require,module,exports){
+},{}],94:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -39319,20 +40081,27 @@ var _constants = require('../constants');
 
 var GameController = (function () {
 	function GameController(model, view) {
+		var _this = this;
+
 		_classCallCheck(this, GameController);
 
 		this.model = model;
 		this.view = view;
 		this.ai = new _libAI2['default'](this.model.boardSize);
 
-		this.giveTurnTo(this.model.humanPlayer);
+		// delay initial turn
+		setTimeout(function () {
+			return _this.giveTurnTo(_this.model.humanPlayer);
+		}, 2000);
 
 		// view events
-		this.view.on(_constants.EVENT_SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));
+		this.view.on(_constants.VIEW_EVENT__SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));
+		this.view.on(_constants.VIEW_EVENT__SHOT_COMPLETED, this.onPlayerShotCompleted.bind(this));
+		this.view.on(_constants.VIEW_EVENT__BOARD_READY, this.onBoardReady.bind(this));
 
 		// model events
-		this.model.humanPlayer.on(_constants.EVENT_SHOT, this.onPlayerShot.bind(this));
-		this.model.computerPlayer.on(_constants.EVENT_SHOT, this.onPlayerShot.bind(this));
+		this.model.humanPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
+		this.model.computerPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 	}
 
 	_createClass(GameController, [{
@@ -39348,28 +40117,23 @@ var GameController = (function () {
 	}, {
 		key: 'onPlayerShot',
 		value: function onPlayerShot(eventName, data, player) {
-			var _this = this;
-
 			window.console.log(this.getInfoMessage(data, player));
 			var gameOver = this.checkWinner();
 			if (gameOver) {
 				return;
 			}
-
-			setTimeout(function () {
-				return _this.giveTurnTo(player);
-			}, _libAI.CONST_AI_DELAY);
 		}
 	}, {
-		key: 'giveTurnTo',
-		value: function giveTurnTo(player) {
+		key: 'onPlayerShotCompleted',
+		value: function onPlayerShotCompleted(eventName, data) {
+			this.giveTurnTo(data.player);
+		}
+	}, {
+		key: 'onBoardReady',
+		value: function onBoardReady(eventName, data) {
 			var _this2 = this;
 
-			window.console.log('' + player.name + '’s turn!');
-			this.getOpponent(player).activated = false;
-			player.activated = true;
-
-			if (this.isComputer(player)) {
+			if (this.isComputer(data.player)) {
 				(function () {
 					var coordinate = _this2.ai.chooseCoordinate();
 
@@ -39382,6 +40146,13 @@ var GameController = (function () {
 					}, _libAI.CONST_AI_DELAY);
 				})();
 			}
+		}
+	}, {
+		key: 'giveTurnTo',
+		value: function giveTurnTo(player) {
+			window.console.log('' + player.name + '’s turn!');
+			this.getOpponent(player).activated = false;
+			player.activated = true;
 		}
 	}, {
 		key: 'getOpponent',
@@ -39441,7 +40212,7 @@ var GameController = (function () {
 exports['default'] = GameController;
 module.exports = exports['default'];
 
-},{"../constants":92,"../lib/AI":94,"../models/Coordinate":100}],94:[function(require,module,exports){
+},{"../constants":93,"../lib/AI":95,"../models/Coordinate":101}],95:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -39523,10 +40294,10 @@ var AI = (function () {
 })();
 
 exports['default'] = AI;
-var CONST_AI_DELAY = 300;
+var CONST_AI_DELAY = 1000;
 exports.CONST_AI_DELAY = CONST_AI_DELAY;
 
-},{"../models/Coordinate":100,"./helpers":98}],95:[function(require,module,exports){
+},{"../models/Coordinate":101,"./helpers":99}],96:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39594,7 +40365,7 @@ var EventEmitter = (function () {
 exports["default"] = EventEmitter;
 module.exports = exports["default"];
 
-},{}],96:[function(require,module,exports){
+},{}],97:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -39686,7 +40457,7 @@ var Model = (function (_EventEmitter) {
 exports['default'] = Model;
 module.exports = exports['default'];
 
-},{"./EventEmitter":95}],97:[function(require,module,exports){
+},{"./EventEmitter":96}],98:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -39745,7 +40516,7 @@ var View = (function (_EventEmitter) {
 exports['default'] = View;
 module.exports = exports['default'];
 
-},{"./EventEmitter":95}],98:[function(require,module,exports){
+},{"./EventEmitter":96}],99:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -39770,7 +40541,7 @@ function getRandomBoolean() {
 	return Math.random() < 0.5;
 }
 
-},{}],99:[function(require,module,exports){
+},{}],100:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -39967,7 +40738,7 @@ var Board = (function (_Model) {
 
 			var result = { coordinate: coordinate, hit: hit, sunk: sunk, ship: ship };
 
-			this.emit(_constants.EVENT_SHOT, result);
+			this.emit(_constants.MODEL_EVENT__SHOT, result);
 
 			return result;
 		}
@@ -39978,7 +40749,7 @@ var Board = (function (_Model) {
 
 exports['default'] = Board;
 
-},{"../constants":92,"../lib/Model":96,"./Coordinate":100,"./ShipPart":104}],100:[function(require,module,exports){
+},{"../constants":93,"../lib/Model":97,"./Coordinate":101,"./ShipPart":105}],101:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -40046,7 +40817,7 @@ var Coordinate = (function (_Model) {
 exports['default'] = Coordinate;
 module.exports = exports['default'];
 
-},{"../lib/Model":96,"../lib/helpers":98}],101:[function(require,module,exports){
+},{"../lib/Model":97,"../lib/helpers":99}],102:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -40094,7 +40865,7 @@ var Game = (function (_Model) {
 exports['default'] = Game;
 module.exports = exports['default'];
 
-},{"../lib/Model":96,"./Board":99,"./Player":102}],102:[function(require,module,exports){
+},{"../lib/Model":97,"./Board":100,"./Player":103}],103:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -40149,8 +40920,8 @@ var Player = (function (_Model) {
 
 		this.deployFleet();
 
-		// proxy `EVENT_SHOT` events from board
-		this.board.on(_constants.EVENT_SHOT, this.proxy.bind(this));
+		// proxy `MODEL_EVENT__SHOT` events from board
+		this.board.on(_constants.MODEL_EVENT__SHOT, this.proxy.bind(this));
 	}
 
 	_inherits(Player, _Model);
@@ -40197,7 +40968,7 @@ var Player = (function (_Model) {
 exports['default'] = Player;
 module.exports = exports['default'];
 
-},{"../constants":92,"../lib/Model":96,"../lib/helpers":98,"./Board":99,"./Coordinate":100,"./Ship":103}],103:[function(require,module,exports){
+},{"../constants":93,"../lib/Model":97,"../lib/helpers":99,"./Board":100,"./Coordinate":101,"./Ship":104}],104:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -40283,7 +41054,7 @@ var Ship = (function (_Model) {
 exports['default'] = Ship;
 module.exports = exports['default'];
 
-},{"../lib/Model":96,"./ShipPart":104}],104:[function(require,module,exports){
+},{"../lib/Model":97,"./ShipPart":105}],105:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -40352,7 +41123,7 @@ var ShipPart = (function (_Model) {
 
 exports['default'] = ShipPart;
 
-},{"../lib/Model":96}],105:[function(require,module,exports){
+},{"../lib/Model":97}],106:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -40378,6 +41149,10 @@ var _libView2 = _interopRequireDefault(_libView);
 var _three = require('three');
 
 var _three2 = _interopRequireDefault(_three);
+
+var _tweenJs = require('tween.js');
+
+var _tweenJs2 = _interopRequireDefault(_tweenJs);
 
 var _threeOrbitControls = require('three-orbit-controls');
 
@@ -40424,13 +41199,25 @@ var Game3dView = (function (_View) {
 		key: 'addEventListeners',
 		value: function addEventListeners() {
 			// view events
+			this.rootElement.addEventListener('mousemove', this.handleMouseMovedOverView.bind(this));
 			this.rootElement.addEventListener('click', this.handleViewClicked.bind(this));
 
 			// model events
-			this.model.humanPlayer.on(_constants.EVENT_SHOT, this.onPlayerShot.bind(this));
-			this.model.computerPlayer.on(_constants.EVENT_SHOT, this.onPlayerShot.bind(this));
+			this.model.humanPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
+			this.model.computerPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 			this.model.humanPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
 			this.model.computerPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
+		}
+	}, {
+		key: 'handleMouseMovedOverView',
+		value: function handleMouseMovedOverView(event) {
+			if (!this.model.humanPlayer.activated) {
+				return;
+			}
+
+			var cells = this.getIntersectedComputerCellsFromEvent(event);
+
+			this.rootElement.style.cursor = cells.length ? 'pointer' : 'default';
 		}
 	}, {
 		key: 'handleViewClicked',
@@ -40439,6 +41226,23 @@ var Game3dView = (function (_View) {
 				return;
 			}
 
+			var cells = this.getIntersectedComputerCellsFromEvent(event);
+
+			if (cells.length === 0) {
+				return;
+			}
+
+			var _cells$0$userData = cells[0].userData;
+			var x = _cells$0$userData.x;
+			var y = _cells$0$userData.y;
+
+			this.emit(_constants.VIEW_EVENT__SHOOT_REQUESTED, {
+				coordinate: new _modelsCoordinate2['default']({ x: x, y: y })
+			});
+		}
+	}, {
+		key: 'getIntersectedComputerCellsFromEvent',
+		value: function getIntersectedComputerCellsFromEvent(event) {
 			var mouseVector = new _three2['default'].Vector2();
 			var raycaster = new _three2['default'].Raycaster();
 
@@ -40455,17 +41259,7 @@ var Game3dView = (function (_View) {
 				return cellIntersection.object;
 			});
 
-			if (cells.length === 0) {
-				return;
-			}
-
-			var _cells$0$userData = cells[0].userData;
-			var x = _cells$0$userData.x;
-			var y = _cells$0$userData.y;
-
-			this.emit(_constants.EVENT_SHOOT_REQUESTED, {
-				coordinate: new _modelsCoordinate2['default']({ x: x, y: y })
-			});
+			return cells;
 		}
 	}, {
 		key: 'onPlayerShot',
@@ -40479,44 +41273,114 @@ var Game3dView = (function (_View) {
 
 			var missed = !hit;
 			var cellWrapper = this.getCellWrapperAtCoordinate(coordinate);
+			var meshesToAnimate = [];
 
 			if (missed) {
 				var cell = cellWrapper.getObjectByName('cell--' + this.getPlayerType(player));
 				cell.material = this.materials.cellMaterialMissed;
-			}
-
-			if (hit) {
-				var shipPart = cellWrapper.getObjectByName('shipPart--' + this.getPlayerType(player));
-				shipPart.material = this.materials.shipPartMaterialHit;
-				if (player === this.model.computerPlayer) {
-					shipPart.visible = true;
-				}
-			}
-
-			if (sunk) {
+				meshesToAnimate.push(cell);
+			} else if (sunk) {
 				var shipPartCoordinates = player.board.getAllShipPartCoordinates(ship);
 				shipPartCoordinates.forEach(function (coordinate) {
 					var cellWrapper = _this.getCellWrapperAtCoordinate(coordinate);
 					var shipPart = cellWrapper.getObjectByName('shipPart--' + _this.getPlayerType(player));
 					shipPart.material = _this.materials.shipPartMaterialSunk;
 					shipPart.visible = true;
+
+					meshesToAnimate.push(shipPart);
 				});
+			} else if (hit) {
+				var shipPart = cellWrapper.getObjectByName('shipPart--' + this.getPlayerType(player));
+				shipPart.material = this.materials.shipPartMaterialHit;
+				if (player === this.model.computerPlayer) {
+					shipPart.visible = true;
+				}
+				meshesToAnimate.push(shipPart);
 			}
+
+			meshesToAnimate.forEach(function (mesh, index) {
+
+				var meshScale = mesh.scale;
+				var tween = new _tweenJs2['default'].Tween(meshScale);
+
+				mesh.scale.set(0, 0, 0);
+
+				tween.to({ x: 1, y: 1, z: 1 }, 1000).easing(_tweenJs2['default'].Easing.Elastic.Out).onUpdate(function () {
+					return mesh.scale.y = meshScale.y;
+				});
+
+				if (index === meshesToAnimate.length - 1) {
+					tween.onComplete(function () {
+						_this.emit(_constants.VIEW_EVENT__SHOT_COMPLETED, {
+							player: player
+						});
+					});
+				}
+
+				tween.start();
+			});
 		}
 	}, {
 		key: 'onPlayerActivationChanged',
 		value: function onPlayerActivationChanged(eventName, data, player) {
-			var _this2 = this;
-
 			var isActive = data.newValue === true;
 			if (!isActive) {
 				return;
 			}
 
+			this.onPlayerActivated(player);
+		}
+	}, {
+		key: 'onPlayerActivated',
+		value: function onPlayerActivated(player) {
+			this.revealBoard(player);
+		}
+	}, {
+		key: 'revealBoard',
+		value: function revealBoard(player) {
+			var _this2 = this;
+
 			var cellWrappers = this.board.children;
-			cellWrappers.forEach(function (cellWrapper) {
-				cellWrapper.rotation.x = player === _this2.model.humanPlayer ? Math.PI : 0;
+			var isHuman = player === this.model.humanPlayer;
+			var angle = isHuman ? Math.PI : 0;
+
+			cellWrappers.forEach(function (cellWrapper, index) {
+
+				var cellRotation = cellWrapper.rotation;
+				var tween = new _tweenJs2['default'].Tween(cellRotation);
+
+				var _getCoordinateForIndex = _this2.getCoordinateForIndex(isHuman ? index : cellWrappers.length - 1 - index);
+
+				var x = _getCoordinateForIndex.x;
+				var y = _getCoordinateForIndex.y;
+
+				var size = _this2.model.boardSize;
+				var delay = 30 * Math.round(Math.sqrt(Math.pow(-x - (size - 1) / 2, 2)) + Math.sqrt(Math.pow(-y - (size - 1) / 2, 2)));
+				// let delay = 20 * ((y + y%2) * size) + ((((y%2 * 2) - 1) * -1) * x);
+				// let delay = 15 * (isHuman ? index : cellWrappers.length-index);
+
+				tween.to({ x: angle }, 1000).delay(delay).easing(_tweenJs2['default'].Easing.Elastic.Out).onUpdate(function () {
+					return cellWrapper.rotation.x = cellRotation.x;
+				});
+
+				if (index === cellWrappers.length - 1) {
+					tween.onComplete(function () {
+						_this2.emit(_constants.VIEW_EVENT__BOARD_READY, {
+							player: player
+						});
+					});
+				}
+
+				tween.start();
 			});
+		}
+	}, {
+		key: 'getCoordinateForIndex',
+		value: function getCoordinateForIndex(index) {
+			var y = Math.floor(index / this.model.boardSize);
+			var x = index - y * this.model.boardSize;
+
+			return { x: x, y: y };
 		}
 	}, {
 		key: 'getCellWrapperAtCoordinate',
@@ -40592,7 +41456,7 @@ var Game3dView = (function (_View) {
 			this.addPlayerShipsToBoard(this.board, this.model.humanPlayer, geometries, materials);
 			this.addPlayerShipsToBoard(this.board, this.model.computerPlayer, geometries, materials);
 
-			scene.add(new _three2['default'].AxisHelper());
+			// scene.add(new THREE.AxisHelper());
 
 			return scene;
 		}
@@ -40600,8 +41464,9 @@ var Game3dView = (function (_View) {
 		key: 'getCamera',
 		value: function getCamera() {
 			var camera = new _three2['default'].PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-			camera.position.z = 20;
-			camera.position.y = 20;
+			camera.position.x = -6;
+			camera.position.y = 18;
+			camera.position.z = 17;
 
 			return camera;
 		}
@@ -40615,7 +41480,7 @@ var Game3dView = (function (_View) {
 		key: 'getRenderer',
 		value: function getRenderer(camera) {
 			var renderer = new _three2['default'].WebGLRenderer({
-				antialias: false,
+				antialias: true,
 				alpha: true
 			});
 
@@ -40741,10 +41606,12 @@ var Game3dView = (function (_View) {
 	}, {
 		key: 'render',
 		value: function render() {
-			window.requestAnimationFrame(this.render.bind(this));
-
 			this.controls.update();
+			_tweenJs2['default'].update();
+
 			this.renderer.render(this.scene, this.camera);
+
+			window.requestAnimationFrame(this.render.bind(this));
 		}
 	}]);
 
@@ -40754,7 +41621,7 @@ var Game3dView = (function (_View) {
 exports['default'] = Game3dView;
 module.exports = exports['default'];
 
-},{"../constants":92,"../lib/View":97,"../models/Coordinate":100,"three":91,"three-orbit-controls":90}],106:[function(require,module,exports){
+},{"../constants":93,"../lib/View":98,"../models/Coordinate":101,"three":91,"three-orbit-controls":90,"tween.js":92}],107:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -40797,12 +41664,8 @@ var GameView = (function (_View) {
 		this.delegate('click', '.Board-cell', this.handleBoardCellClicked.bind(this));
 
 		// model events
-		this.model.humanPlayer.on(_constants.EVENT_SHOT, function () {
-			return _this.render();
-		});
-		this.model.computerPlayer.on(_constants.EVENT_SHOT, function () {
-			return _this.render();
-		});
+		this.model.humanPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
+		this.model.computerPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 		this.model.humanPlayer.on('changed:activated', function () {
 			return _this.render();
 		});
@@ -40825,8 +41688,21 @@ var GameView = (function (_View) {
 			var x = _cellElement$dataset.x;
 			var y = _cellElement$dataset.y;
 
-			this.emit(_constants.EVENT_SHOOT_REQUESTED, {
+			this.emit(_constants.VIEW_EVENT__SHOOT_REQUESTED, {
 				coordinate: new _modelsCoordinate2['default']({ x: x, y: y })
+			});
+		}
+	}, {
+		key: 'onPlayerShot',
+		value: function onPlayerShot(eventName, data, player) {
+			this.render();
+
+			this.emit(_constants.VIEW_EVENT__SHOT_COMPLETED, {
+				player: player
+			});
+
+			this.emit(_constants.VIEW_EVENT__BOARD_READY, {
+				player: player
 			});
 		}
 	}, {
@@ -40888,4 +41764,4 @@ var GameView = (function (_View) {
 exports['default'] = GameView;
 module.exports = exports['default'];
 
-},{"../constants":92,"../lib/View":97,"../models/Coordinate":100}]},{},[1]);
+},{"../constants":93,"../lib/View":98,"../models/Coordinate":101}]},{},[1]);
