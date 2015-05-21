@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "three": "^0.71.0",
-    "three-orbit-controls": "^69.0.4"
+    "three-orbit-controls": "^69.0.4",
+    "tween.js": "^0.14.0"
   }
 }

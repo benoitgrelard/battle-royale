@@ -1,6 +1,11 @@
 import Coordinate from '../models/Coordinate';
 import AI, { CONST_AI_DELAY } from '../lib/AI';
-import { VIEW_EVENT__SHOOT_REQUESTED, MODEL_EVENT__SHOT, VIEW_EVENT__SHOT_COMPLETED } from '../constants';
+import {
+	VIEW_EVENT__SHOOT_REQUESTED,
+	MODEL_EVENT__SHOT,
+	VIEW_EVENT__SHOT_COMPLETED,
+	VIEW_EVENT__BOARD_READY
+} from '../constants';
 
 
 /**
@@ -19,6 +24,7 @@ export default class GameController {
 		// view events
 		this.view.on(VIEW_EVENT__SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));
 		this.view.on(VIEW_EVENT__SHOT_COMPLETED, this.onPlayerShotCompleted.bind(this));
+		this.view.on(VIEW_EVENT__BOARD_READY, this.onBoardReady.bind(this));
 
 		// model events
 		this.model.humanPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
@@ -41,12 +47,8 @@ export default class GameController {
 		this.giveTurnTo(data.player);
 	}
 
-	giveTurnTo (player) {
-		window.console.log(`${player.name}’s turn!`);
-		this.getOpponent(player).activated = false;
-		player.activated = true;
-
-		if (this.isComputer(player)) {
+	onBoardReady (eventName, data) {
+		if (this.isComputer(data.player)) {
 			let coordinate = this.ai.chooseCoordinate();
 
 			setTimeout(() => {
@@ -55,6 +57,12 @@ export default class GameController {
 				this.ai.updateHitMapAtCoordinate(coordinate, hit, sunk);
 			}, CONST_AI_DELAY);
 		}
+	}
+
+	giveTurnTo (player) {
+		window.console.log(`${player.name}’s turn!`);
+		this.getOpponent(player).activated = false;
+		player.activated = true;
 	}
 
 	getOpponent (player) {

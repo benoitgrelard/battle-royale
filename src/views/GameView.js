@@ -4,6 +4,7 @@ import {
 	VIEW_EVENT__SHOOT_REQUESTED,
 	MODEL_EVENT__SHOT,
 	VIEW_EVENT__SHOT_COMPLETED,
+	VIEW_EVENT__BOARD_READY,
 	CELL_MISSED
 } from '../constants';
 
@@ -39,7 +40,12 @@ export default class GameView extends View {
 
 	onPlayerShot (eventName, data, player) {
 		this.render();
+
 		this.emit(VIEW_EVENT__SHOT_COMPLETED, {
+			player
+		});
+
+		this.emit(VIEW_EVENT__BOARD_READY, {
 			player
 		});
 	}

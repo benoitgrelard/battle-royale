@@ -1,11 +1,13 @@
 import View from '../lib/View';
 import THREE from 'three';
+import TWEEN from 'tween.js';
 import orbitControls from 'three-orbit-controls';
 import Coordinate from '../models/Coordinate';
 import {
 	VIEW_EVENT__SHOOT_REQUESTED,
 	MODEL_EVENT__SHOT,
-	VIEW_EVENT__SHOT_COMPLETED
+	VIEW_EVENT__SHOT_COMPLETED,
+	VIEW_EVENT__BOARD_READY
 } from '../constants';
 
 
@@ -92,36 +94,58 @@ export default class Game3dView extends View {
 		let { coordinate, hit, sunk, ship } = data;
 		let missed = !hit;
 		let cellWrapper = this.getCellWrapperAtCoordinate(coordinate);
+		let meshesToAnimate = [];
 
 		if (missed) {
 			let cell = cellWrapper.getObjectByName(`cell--${this.getPlayerType(player)}`);
 			cell.material = this.materials.cellMaterialMissed;
+			meshesToAnimate.push(cell);
 		}
 
-		if (hit) {
-			let shipPart = cellWrapper.getObjectByName(`shipPart--${this.getPlayerType(player)}`);
-			shipPart.material = this.materials.shipPartMaterialHit;
-			if (player === this.model.computerPlayer) {
-				shipPart.visible = true;
-			}
-		}
-
-		if (sunk) {
+		else if (sunk) {
 			let shipPartCoordinates = player.board.getAllShipPartCoordinates(ship);
 			shipPartCoordinates.forEach(coordinate => {
 				let cellWrapper = this.getCellWrapperAtCoordinate(coordinate);
 				let shipPart = cellWrapper.getObjectByName(`shipPart--${this.getPlayerType(player)}`);
 				shipPart.material = this.materials.shipPartMaterialSunk;
 				shipPart.visible = true;
+
+				meshesToAnimate.push(shipPart);
 			});
 		}
 
-		let hitAnimationDuration = 2000;
-		setTimeout(() => {
-			this.emit(VIEW_EVENT__SHOT_COMPLETED, {
-				player
-			});
-		}, hitAnimationDuration);
+		else if (hit) {
+			let shipPart = cellWrapper.getObjectByName(`shipPart--${this.getPlayerType(player)}`);
+			shipPart.material = this.materials.shipPartMaterialHit;
+			if (player === this.model.computerPlayer) {
+				shipPart.visible = true;
+			}
+			meshesToAnimate.push(shipPart);
+		}
+
+		meshesToAnimate.forEach((mesh, index) => {
+
+			let meshScale = mesh.scale;
+			let tween = new TWEEN.Tween(meshScale);
+
+			mesh.scale.set(0, 0, 0);
+
+			tween
+				.to({ x: 1, y: 1, z: 1 }, 1000)
+				.easing(TWEEN.Easing.Elastic.Out)
+				.onUpdate(() => mesh.scale.y = meshScale.y);
+
+			if (index === meshesToAnimate.length-1) {
+				tween.onComplete(() => {
+					this.emit(VIEW_EVENT__SHOT_COMPLETED, {
+						player
+					});
+				});
+			}
+
+			tween.start();
+
+		});
 	}
 
 	onPlayerActivationChanged (eventName, data, player) {
@@ -137,9 +161,43 @@ export default class Game3dView extends View {
 
 	revealBoard (player) {
 		let cellWrappers = this.board.children;
-		cellWrappers.forEach(cellWrapper => {
-			cellWrapper.rotation.x = player === this.model.humanPlayer ? Math.PI : 0;
+		let isHuman = player === this.model.humanPlayer;
+		let angle = isHuman ? Math.PI : 0;
+
+		cellWrappers.forEach((cellWrapper, index) => {
+
+			let cellRotation = cellWrapper.rotation;
+			let tween = new TWEEN.Tween(cellRotation);
+			let { x, y } = this.getCoordinateForIndex( isHuman ? index : cellWrappers.length - 1 - index);
+			let size = this.model.boardSize;
+			let delay = 30 * Math.round( Math.sqrt( Math.pow(-x - (size - 1)/2, 2) ) + Math.sqrt( Math.pow(-y - (size - 1)/2, 2) ) );
+			// let delay = 20 * ((y + y%2) * size) + ((((y%2 * 2) - 1) * -1) * x);
+			// let delay = 15 * (isHuman ? index : cellWrappers.length-index);
+
+			tween
+				.to({ x: angle }, 1000)
+				.delay(delay)
+				.easing(TWEEN.Easing.Elastic.Out)
+				.onUpdate(() => cellWrapper.rotation.x = cellRotation.x);
+
+			if (index === cellWrappers.length-1) {
+				tween.onComplete(() => {
+					this.emit(VIEW_EVENT__BOARD_READY, {
+						player
+					});
+				});
+			}
+
+			tween.start();
+
 		});
+	}
+
+	getCoordinateForIndex (index) {
+		let y = Math.floor(index / this.model.boardSize);
+		let x = index - y * this.model.boardSize;
+
+		return { x, y };
 	}
 
 	getCellWrapperAtCoordinate (coordinate) {
@@ -211,15 +269,16 @@ export default class Game3dView extends View {
 		this.addPlayerShipsToBoard(this.board, this.model.humanPlayer, geometries, materials);
 		this.addPlayerShipsToBoard(this.board, this.model.computerPlayer, geometries, materials);
 
-		scene.add(new THREE.AxisHelper());
+		// scene.add(new THREE.AxisHelper());
 
 		return scene;
 	}
 
 	getCamera () {
 		let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-		camera.position.z = 20;
-		camera.position.y = 20;
+		camera.position.x = -6;
+		camera.position.y = 18;
+		camera.position.z = 17;
 
 		return camera;
 	}
@@ -231,7 +290,7 @@ export default class Game3dView extends View {
 
 	getRenderer (camera) {
 		let renderer = new THREE.WebGLRenderer({
-			antialias: false,
+			antialias: true,
 			alpha: true
 		});
 
@@ -351,10 +410,12 @@ export default class Game3dView extends View {
 	}
 
 	render () {
-		window.requestAnimationFrame(this.render.bind(this));
-
 		this.controls.update();
+		TWEEN.update();
+
 		this.renderer.render(this.scene, this.camera);
+
+		window.requestAnimationFrame(this.render.bind(this));
 	}
 
 }
