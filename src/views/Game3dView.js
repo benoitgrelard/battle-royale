@@ -125,15 +125,11 @@ export default class Game3dView extends View {
 
 		meshesToAnimate.forEach((mesh, index) => {
 
-			let meshScale = mesh.scale;
-			let tween = new TWEEN.Tween(meshScale);
-
-			mesh.scale.set(0, 0, 0);
+			let tween = new TWEEN.Tween(mesh.scale);
 
 			tween
-				.to({ x: 1, y: 1, z: 1 }, 1000)
-				.easing(TWEEN.Easing.Elastic.Out)
-				.onUpdate(() => mesh.scale.y = meshScale.y);
+				.to({ x: [0, 1], y: [0, 1], z: [0, 1] }, 1000)
+				.easing(TWEEN.Easing.Elastic.Out);
 
 			if (index === meshesToAnimate.length-1) {
 				tween.onComplete(() => {
@@ -166,8 +162,7 @@ export default class Game3dView extends View {
 
 		cellWrappers.forEach((cellWrapper, index) => {
 
-			let cellRotation = cellWrapper.rotation;
-			let tween = new TWEEN.Tween(cellRotation);
+			let tween = new TWEEN.Tween(cellWrapper.rotation);
 			let { x, y } = this.getCoordinateForIndex( isHuman ? index : cellWrappers.length - 1 - index);
 			let size = this.model.boardSize;
 			let delay = 30 * Math.round( Math.sqrt( Math.pow(-x - (size - 1)/2, 2) ) + Math.sqrt( Math.pow(-y - (size - 1)/2, 2) ) );
@@ -177,8 +172,7 @@ export default class Game3dView extends View {
 			tween
 				.to({ x: angle }, 1000)
 				.delay(delay)
-				.easing(TWEEN.Easing.Elastic.Out)
-				.onUpdate(() => cellWrapper.rotation.x = cellRotation.x);
+				.easing(TWEEN.Easing.Elastic.Out);
 
 			if (index === cellWrappers.length-1) {
 				tween.onComplete(() => {
