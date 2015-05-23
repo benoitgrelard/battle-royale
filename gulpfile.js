@@ -11,6 +11,7 @@ var jshint = require('gulp-jshint');
 var path = require('path');
 var util = require('gulp-util');
 var reload = browserSync.reload;
+var runSequence = require('run-sequence');
 var source = require('vinyl-source-stream');
 var watchify = require('watchify');
 
@@ -29,9 +30,21 @@ var distPath = './dist/';
  * ============================================================================
  */
 gulp.task('default', ['dev']);
-gulp.task('dev', ['lint', 'clean', 'html', 'css', 'serve', 'watch']);
-gulp.task('build', ['lint', 'clean', 'html', 'css', 'js']);
-gulp.task('deploy', ['build', 'deploy-gh-pages']);
+
+gulp.task('dev', function(callback) {
+	'use strict';
+	runSequence('clean', 'lint', ['html', 'css'], 'serve', 'watch', callback);
+});
+
+gulp.task('build', function(callback) {
+	'use strict';
+	runSequence('clean', 'lint', ['html', 'css', 'js'], callback);
+});
+
+gulp.task('deploy', function(callback) {
+	'use strict';
+	runSequence('build', 'deploy-gh-pages', callback);
+});
 
 
 /**
@@ -89,7 +102,7 @@ gulp.task('serve', function() {
 		});
 });
 
-gulp.task('watch', ['serve'], function() {
+gulp.task('watch', function() {
 	'use strict';
 
 	watchHtml();
@@ -135,7 +148,7 @@ gulp.task('watch', ['serve'], function() {
 	}
 });
 
-gulp.task('deploy-gh-pages', ['build'], function(cb) {
+gulp.task('deploy-gh-pages', function(cb) {
 	'use strict';
 	return ghpages.publish(path.join(process.cwd(), distPath), cb);
 });
