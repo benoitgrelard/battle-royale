@@ -17,6 +17,7 @@ export default class GameController {
 		this.model = model;
 		this.view = view;
 		this.ai = new AI(this.model.boardSize);
+		this.verbose = false;
 
 		// delay initial turn
 		setTimeout(() => this.giveTurnTo(this.model.humanPlayer), 2000);
@@ -38,7 +39,7 @@ export default class GameController {
 	}
 
 	onPlayerShot (eventName, data, player) {
-		window.console.log(this.getInfoMessage(data, player));
+		if (this.verbose) { window.console.log(this.getInfoMessage(data, player)); }
 		let gameOver = this.checkWinner();
 		if (gameOver) { return; }
 	}
@@ -60,7 +61,7 @@ export default class GameController {
 	}
 
 	giveTurnTo (player) {
-		window.console.log(`${player.name}’s turn!`);
+		if (this.verbose) { window.console.log(`${player.name}’s turn!`); }
 		this.getOpponent(player).activated = false;
 		player.activated = true;
 	}
