@@ -9,9 +9,7 @@ var _modelsGame = require('./models/Game');
 
 var _modelsGame2 = _interopRequireDefault(_modelsGame);
 
-var _viewsGameView = require('./views/GameView');
-
-var _viewsGameView2 = _interopRequireDefault(_viewsGameView);
+// import GameView from './views/GameView';
 
 var _viewsGame3dView = require('./views/Game3dView');
 
@@ -24,18 +22,18 @@ var _controllersGameController2 = _interopRequireDefault(_controllersGameControl
 var _libHelpers = require('./lib/helpers');
 
 var gameModel = new _modelsGame2['default']();
-var game2dView = new _viewsGameView2['default'](gameModel, (0, _libHelpers.$)('#view2d')[0]);
+// let game2dView = new GameView(gameModel, $('#view2d')[0]);
 var game3dView = new _viewsGame3dView2['default'](gameModel, (0, _libHelpers.$)('#view3d')[0]);
 // let gameController1 = new GameController(gameModel, game2dView);
 var gameController2 = new _controllersGameController2['default'](gameModel, game3dView);
 
 window.gameModel = gameModel;
-window.game2dView = game2dView;
+// window.game2dView = game2dView;
 window.game3dView = game3dView;
 // window.gameController1 = gameController1;
 window.gameController2 = gameController2;
 
-},{"./controllers/GameController":94,"./lib/helpers":99,"./models/Game":102,"./views/Game3dView":106,"./views/GameView":107,"babelify/polyfill":89}],2:[function(require,module,exports){
+},{"./controllers/GameController":94,"./lib/helpers":99,"./models/Game":102,"./views/Game3dView":106,"babelify/polyfill":89}],2:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -40088,6 +40086,7 @@ var GameController = (function () {
 		this.model = model;
 		this.view = view;
 		this.ai = new _libAI2['default'](this.model.boardSize);
+		this.verbose = false;
 
 		// delay initial turn
 		setTimeout(function () {
@@ -40117,7 +40116,9 @@ var GameController = (function () {
 	}, {
 		key: 'onPlayerShot',
 		value: function onPlayerShot(eventName, data, player) {
-			window.console.log(this.getInfoMessage(data, player));
+			if (this.verbose) {
+				window.console.log(this.getInfoMessage(data, player));
+			}
 			var gameOver = this.checkWinner();
 			if (gameOver) {
 				return;
@@ -40150,7 +40151,9 @@ var GameController = (function () {
 	}, {
 		key: 'giveTurnTo',
 		value: function giveTurnTo(player) {
-			window.console.log('' + player.name + '’s turn!');
+			if (this.verbose) {
+				window.console.log('' + player.name + '’s turn!');
+			}
 			this.getOpponent(player).activated = false;
 			player.activated = true;
 		}
@@ -41186,11 +41189,11 @@ var Game3dView = (function (_View) {
 		this.controls = this.getControls(this.camera);
 		this.renderer = this.getRenderer(this.camera);
 
+		this.addEventListeners();
+
 		// kick-off rendering
 		this.rootElement.appendChild(this.renderer.domElement);
 		this.render();
-
-		this.addEventListeners();
 	}
 
 	_inherits(Game3dView, _View);
@@ -41200,7 +41203,7 @@ var Game3dView = (function (_View) {
 		value: function addEventListeners() {
 			// view events
 			this.rootElement.addEventListener('mousemove', this.handleMouseMovedOverView.bind(this));
-			this.rootElement.addEventListener('click', this.handleViewClicked.bind(this));
+			this.rootElement.addEventListener('mousedown', this.handleViewClicked.bind(this));
 
 			// model events
 			this.model.humanPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
@@ -41273,12 +41276,10 @@ var Game3dView = (function (_View) {
 
 			var missed = !hit;
 			var cellWrapper = this.getCellWrapperAtCoordinate(coordinate);
-			var meshesToAnimate = [];
 
 			if (missed) {
 				var cell = cellWrapper.getObjectByName('cell--' + this.getPlayerType(player));
 				cell.material = this.materials.cellMaterialMissed;
-				meshesToAnimate.push(cell);
 			} else if (sunk) {
 				var shipPartCoordinates = player.board.getAllShipPartCoordinates(ship);
 				shipPartCoordinates.forEach(function (coordinate) {
@@ -41286,8 +41287,6 @@ var Game3dView = (function (_View) {
 					var shipPart = cellWrapper.getObjectByName('shipPart--' + _this.getPlayerType(player));
 					shipPart.material = _this.materials.shipPartMaterialSunk;
 					shipPart.visible = true;
-
-					meshesToAnimate.push(shipPart);
 				});
 			} else if (hit) {
 				var shipPart = cellWrapper.getObjectByName('shipPart--' + this.getPlayerType(player));
@@ -41295,29 +41294,45 @@ var Game3dView = (function (_View) {
 				if (player === this.model.computerPlayer) {
 					shipPart.visible = true;
 				}
-				meshesToAnimate.push(shipPart);
 			}
 
-			meshesToAnimate.forEach(function (mesh, index) {
+			var force = missed ? 0.35 : sunk ? 3 : hit ? 1 : 0;
+			var xP = coordinate.x;
+			var yP = coordinate.y;
 
-				var meshScale = mesh.scale;
-				var tween = new _tweenJs2['default'].Tween(meshScale);
+			var cellWrappers = this.board.children;
+			cellWrappers.forEach(function (cellWrapper, index) {
+				var _cellWrapper$userData = cellWrapper.userData;
+				var x = _cellWrapper$userData.x;
+				var y = _cellWrapper$userData.y;
 
-				mesh.scale.set(0, 0, 0);
+				var circularDistanceFromImpact = Math.sqrt(Math.pow(xP - x, 2) + Math.pow(yP - y, 2));
 
-				tween.to({ x: 1, y: 1, z: 1 }, 1000).easing(_tweenJs2['default'].Easing.Elastic.Out).onUpdate(function () {
-					return mesh.scale.y = meshScale.y;
-				});
+				var props = {
+					posY: 0,
+					rotX: cellWrapper.rotation.x,
+					rotZ: cellWrapper.rotation.z
+				};
 
-				if (index === meshesToAnimate.length - 1) {
+				var tween = new _tweenJs2['default'].Tween(props);
+
+				tween.to({
+					posY: [0, (10 - circularDistanceFromImpact) * -0.1 * force, 0],
+					rotX: [cellWrapper.rotation.x, cellWrapper.rotation.x + _three2['default'].Math.degToRad((yP - y) * 3 * force), cellWrapper.rotation.x],
+					rotZ: [cellWrapper.rotation.z, cellWrapper.rotation.z + _three2['default'].Math.degToRad((xP - x) * -3 * force), cellWrapper.rotation.z]
+				}, 3000).delay(circularDistanceFromImpact * 50).easing(_tweenJs2['default'].Easing.Elastic.Out).onUpdate(function () {
+					cellWrapper.position.y = props.posY;
+					cellWrapper.rotation.x = props.rotX;
+					cellWrapper.rotation.z = props.rotZ;
+				}).start();
+
+				if (index === cellWrappers.length - 1) {
 					tween.onComplete(function () {
 						_this.emit(_constants.VIEW_EVENT__SHOT_COMPLETED, {
 							player: player
 						});
 					});
 				}
-
-				tween.start();
 			});
 		}
 	}, {
@@ -41346,22 +41361,15 @@ var Game3dView = (function (_View) {
 
 			cellWrappers.forEach(function (cellWrapper, index) {
 
-				var cellRotation = cellWrapper.rotation;
-				var tween = new _tweenJs2['default'].Tween(cellRotation);
+				var tween = new _tweenJs2['default'].Tween(cellWrapper.rotation);
+				var _cellWrapper$userData2 = cellWrapper.userData;
+				var x = _cellWrapper$userData2.x;
+				var y = _cellWrapper$userData2.y;
 
-				var _getCoordinateForIndex = _this2.getCoordinateForIndex(isHuman ? index : cellWrappers.length - 1 - index);
+				var s = _this2.model.boardSize;
+				var circularDistance = Math.sqrt(Math.pow(isHuman ? x : s - x, 2) + Math.pow(isHuman ? y : s - y, 2));
 
-				var x = _getCoordinateForIndex.x;
-				var y = _getCoordinateForIndex.y;
-
-				var size = _this2.model.boardSize;
-				var delay = 30 * Math.round(Math.sqrt(Math.pow(-x - (size - 1) / 2, 2)) + Math.sqrt(Math.pow(-y - (size - 1) / 2, 2)));
-				// let delay = 20 * ((y + y%2) * size) + ((((y%2 * 2) - 1) * -1) * x);
-				// let delay = 15 * (isHuman ? index : cellWrappers.length-index);
-
-				tween.to({ x: angle }, 1000).delay(delay).easing(_tweenJs2['default'].Easing.Elastic.Out).onUpdate(function () {
-					return cellWrapper.rotation.x = cellRotation.x;
-				});
+				tween.to({ x: angle }, 1000).delay(30 * circularDistance).easing(_tweenJs2['default'].Easing.Exponential.Out).start();
 
 				if (index === cellWrappers.length - 1) {
 					tween.onComplete(function () {
@@ -41370,8 +41378,6 @@ var Game3dView = (function (_View) {
 						});
 					});
 				}
-
-				tween.start();
 			});
 		}
 	}, {
@@ -41576,9 +41582,9 @@ var Game3dView = (function (_View) {
 			var _this3 = this;
 
 			board.children.forEach(function (cellWrapper) {
-				var _cellWrapper$userData = cellWrapper.userData;
-				var x = _cellWrapper$userData.x;
-				var y = _cellWrapper$userData.y;
+				var _cellWrapper$userData3 = cellWrapper.userData;
+				var x = _cellWrapper$userData3.x;
+				var y = _cellWrapper$userData3.y;
 
 				var coordinate = new _modelsCoordinate2['default']({ x: x, y: y });
 				var hasShipPart = player.board.hasShipPartAtCoordinate(coordinate);
@@ -41609,6 +41615,8 @@ var Game3dView = (function (_View) {
 			this.controls.update();
 			_tweenJs2['default'].update();
 
+			this.board.rotation.y += 0.0005;
+
 			this.renderer.render(this.scene, this.camera);
 
 			window.requestAnimationFrame(this.render.bind(this));
@@ -41621,147 +41629,4 @@ var Game3dView = (function (_View) {
 exports['default'] = Game3dView;
 module.exports = exports['default'];
 
-},{"../constants":93,"../lib/View":98,"../models/Coordinate":101,"three":91,"three-orbit-controls":90,"tween.js":92}],107:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-	value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
-
-var _libView = require('../lib/View');
-
-var _libView2 = _interopRequireDefault(_libView);
-
-var _modelsCoordinate = require('../models/Coordinate');
-
-var _modelsCoordinate2 = _interopRequireDefault(_modelsCoordinate);
-
-var _constants = require('../constants');
-
-/**
- * @class GameView
- */
-
-var GameView = (function (_View) {
-	function GameView(model, element) {
-		var _this = this;
-
-		_classCallCheck(this, GameView);
-
-		_get(Object.getPrototypeOf(GameView.prototype), 'constructor', this).call(this, model, element);
-
-		// view events
-		this.delegate('click', '.Board-cell', this.handleBoardCellClicked.bind(this));
-
-		// model events
-		this.model.humanPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
-		this.model.computerPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
-		this.model.humanPlayer.on('changed:activated', function () {
-			return _this.render();
-		});
-		this.model.computerPlayer.on('changed:activated', function () {
-			return _this.render();
-		});
-	}
-
-	_inherits(GameView, _View);
-
-	_createClass(GameView, [{
-		key: 'handleBoardCellClicked',
-		value: function handleBoardCellClicked(event) {
-			if (!this.model.humanPlayer.activated) {
-				return;
-			}
-
-			var cellElement = event.target;
-			var _cellElement$dataset = cellElement.dataset;
-			var x = _cellElement$dataset.x;
-			var y = _cellElement$dataset.y;
-
-			this.emit(_constants.VIEW_EVENT__SHOOT_REQUESTED, {
-				coordinate: new _modelsCoordinate2['default']({ x: x, y: y })
-			});
-		}
-	}, {
-		key: 'onPlayerShot',
-		value: function onPlayerShot(eventName, data, player) {
-			this.render();
-
-			this.emit(_constants.VIEW_EVENT__SHOT_COMPLETED, {
-				player: player
-			});
-
-			this.emit(_constants.VIEW_EVENT__BOARD_READY, {
-				player: player
-			});
-		}
-	}, {
-		key: 'render',
-		value: function render() {
-			var humanPlayer = this.model.humanPlayer;
-			var computerPlayer = this.model.computerPlayer;
-			var showShips = true;
-
-			var output = '\n\t\t\t<div class="Player -human">\n\t\t\t\t<h1>' + humanPlayer.name + '</h1>\n\t\t\t\t' + this.renderBoard(humanPlayer, showShips) + '\n\t\t\t</div>\n\n\t\t\t<div class="Player -computer">\n\t\t\t\t<h1>' + computerPlayer.name + '</h1>\n\t\t\t\t' + this.renderBoard(computerPlayer) + '\n\t\t\t</div>\n\t\t';
-
-			this.rootElement.innerHTML = output;
-		}
-	}, {
-		key: 'renderBoard',
-		value: function renderBoard(player, showShips) {
-			var board = player.board;
-			var output = '';
-			var typeModifer = player === this.model.humanPlayer ? '-human' : '-computer';
-			var playableModifier = player.activated ? '' : '-playable';
-
-			output += '<div class="Board ' + typeModifer + ' ' + playableModifier + '">';
-
-			for (var y = 0; y < board.grid.length; y++) {
-				for (var x = 0; x < board.grid.length; x++) {
-					var coordinate = new _modelsCoordinate2['default']({ x: x, y: y });
-					var hasShipPart = board.hasShipPartAtCoordinate(coordinate);
-					var classModifier = '';
-					if (hasShipPart) {
-						var shipPart = board.getAtCoordinate(coordinate);
-						if (shipPart.getShip().isSunk()) {
-							classModifier += ' -sunk';
-						} else if (shipPart.isHit()) {
-							classModifier += ' -hit';
-						} else if (showShips) {
-							classModifier += ' -ship';
-						}
-					} else {
-						var isMissed = board.getAtCoordinate(coordinate) === _constants.CELL_MISSED;
-						if (isMissed) {
-							classModifier += ' -missed';
-						}
-					}
-					output += '<div class="Board-cell' + classModifier + '" data-x="' + x + '" data-y="' + y + '"></div>';
-				}
-			}
-			output += '</div>';
-
-			return output;
-		}
-	}, {
-		key: 'destroy',
-		value: function destroy() {}
-	}]);
-
-	return GameView;
-})(_libView2['default']);
-
-exports['default'] = GameView;
-module.exports = exports['default'];
-
-},{"../constants":93,"../lib/View":98,"../models/Coordinate":101}]},{},[1]);
+},{"../constants":93,"../lib/View":98,"../models/Coordinate":101,"three":91,"three-orbit-controls":90,"tween.js":92}]},{},[1]);
