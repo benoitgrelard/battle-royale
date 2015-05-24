@@ -122,7 +122,7 @@ gulp.task('watch', function() {
 	function watchJs() {
 		var options = {
 			entries: [sourcePath + 'main.js'],
-			debug: true
+			debug: false
 		};
 		options = assign({}, watchify.args, options);
 		var bundler = watchify(browserify(options));

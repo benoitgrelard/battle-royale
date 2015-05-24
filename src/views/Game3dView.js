@@ -31,17 +31,17 @@ export default class Game3dView extends View {
 		this.controls = this.getControls(this.camera);
 		this.renderer = this.getRenderer(this.camera);
 
+		this.addEventListeners();
+
 		// kick-off rendering
 		this.rootElement.appendChild(this.renderer.domElement);
 		this.render();
-
-		this.addEventListeners();
 	}
 
 	addEventListeners () {
 		// view events
 		this.rootElement.addEventListener('mousemove', this.handleMouseMovedOverView.bind(this));
-		this.rootElement.addEventListener('click', this.handleViewClicked.bind(this));
+		this.rootElement.addEventListener('mousedown', this.handleViewClicked.bind(this));
 
 		// model events
 		this.model.humanPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
@@ -94,14 +94,11 @@ export default class Game3dView extends View {
 		let { coordinate, hit, sunk, ship } = data;
 		let missed = !hit;
 		let cellWrapper = this.getCellWrapperAtCoordinate(coordinate);
-		let meshesToAnimate = [];
 
 		if (missed) {
 			let cell = cellWrapper.getObjectByName(`cell--${this.getPlayerType(player)}`);
 			cell.material = this.materials.cellMaterialMissed;
-			meshesToAnimate.push(cell);
 		}
-
 		else if (sunk) {
 			let shipPartCoordinates = player.board.getAllShipPartCoordinates(ship);
 			shipPartCoordinates.forEach(coordinate => {
@@ -109,37 +106,62 @@ export default class Game3dView extends View {
 				let shipPart = cellWrapper.getObjectByName(`shipPart--${this.getPlayerType(player)}`);
 				shipPart.material = this.materials.shipPartMaterialSunk;
 				shipPart.visible = true;
-
-				meshesToAnimate.push(shipPart);
 			});
 		}
-
 		else if (hit) {
 			let shipPart = cellWrapper.getObjectByName(`shipPart--${this.getPlayerType(player)}`);
 			shipPart.material = this.materials.shipPartMaterialHit;
 			if (player === this.model.computerPlayer) {
 				shipPart.visible = true;
 			}
-			meshesToAnimate.push(shipPart);
 		}
 
-		meshesToAnimate.forEach((mesh, index) => {
+		let force = missed ? 0.35 : sunk ? 3 : hit ? 1 : 0;
+		let { x: xP, y: yP } = coordinate;
+		let cellWrappers = this.board.children;
+		cellWrappers.forEach((cellWrapper, index) => {
 
-			let tween = new TWEEN.Tween(mesh.scale);
+			let { x, y } = cellWrapper.userData;
+			let circularDistanceFromImpact = Math.sqrt( Math.pow(xP - x, 2) + Math.pow(yP - y, 2) );
+
+			let props = {
+				posY: 0,
+				rotX: cellWrapper.rotation.x,
+				rotZ: cellWrapper.rotation.z
+			};
+
+			let tween = new TWEEN.Tween(props);
 
 			tween
-				.to({ x: [0, 1], y: [0, 1], z: [0, 1] }, 1000)
-				.easing(TWEEN.Easing.Elastic.Out);
+				.to({
+					posY: [ 0, (10-circularDistanceFromImpact) * -0.1 * force, 0 ],
+					rotX: [
+						cellWrapper.rotation.x,
+						cellWrapper.rotation.x + THREE.Math.degToRad((yP - y) * 3 * force),
+						cellWrapper.rotation.x
+					],
+					rotZ: [
+						cellWrapper.rotation.z,
+						cellWrapper.rotation.z + THREE.Math.degToRad((xP - x) * -3 * force),
+						cellWrapper.rotation.z
+					]
+				}, 3000)
+				.delay(circularDistanceFromImpact * 50)
+				.easing(TWEEN.Easing.Elastic.Out)
+				.onUpdate(() => {
+					cellWrapper.position.y = props.posY;
+					cellWrapper.rotation.x = props.rotX;
+					cellWrapper.rotation.z = props.rotZ;
+				})
+				.start();
 
-			if (index === meshesToAnimate.length-1) {
+			if (index === cellWrappers.length-1) {
 				tween.onComplete(() => {
 					this.emit(VIEW_EVENT__SHOT_COMPLETED, {
 						player
 					});
 				});
 			}
-
-			tween.start();
 
 		});
 	}
@@ -163,16 +185,15 @@ export default class Game3dView extends View {
 		cellWrappers.forEach((cellWrapper, index) => {
 
 			let tween = new TWEEN.Tween(cellWrapper.rotation);
-			let { x, y } = this.getCoordinateForIndex( isHuman ? index : cellWrappers.length - 1 - index);
-			let size = this.model.boardSize;
-			let delay = 30 * Math.round( Math.sqrt( Math.pow(-x - (size - 1)/2, 2) ) + Math.sqrt( Math.pow(-y - (size - 1)/2, 2) ) );
-			// let delay = 20 * ((y + y%2) * size) + ((((y%2 * 2) - 1) * -1) * x);
-			// let delay = 15 * (isHuman ? index : cellWrappers.length-index);
+			let { x, y } = cellWrapper.userData;
+			let s = this.model.boardSize;
+			let circularDistance = Math.sqrt( Math.pow( isHuman ? x : s-x, 2) + Math.pow( isHuman ? y : s-y, 2) );
 
 			tween
 				.to({ x: angle }, 1000)
-				.delay(delay)
-				.easing(TWEEN.Easing.Elastic.Out);
+				.delay(30 * circularDistance)
+				.easing(TWEEN.Easing.Exponential.Out)
+				.start();
 
 			if (index === cellWrappers.length-1) {
 				tween.onComplete(() => {
@@ -181,8 +202,6 @@ export default class Game3dView extends View {
 					});
 				});
 			}
-
-			tween.start();
 
 		});
 	}
@@ -406,6 +425,8 @@ export default class Game3dView extends View {
 	render () {
 		this.controls.update();
 		TWEEN.update();
+
+		this.board.rotation.y += 0.0005;
 
 		this.renderer.render(this.scene, this.camera);
 
