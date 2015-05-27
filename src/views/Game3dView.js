@@ -124,29 +124,18 @@ export default class Game3dView extends View {
 			let { x, y } = cellWrapper.userData;
 			let circularDistanceFromImpact = Math.sqrt( Math.pow(xP - x, 2) + Math.pow(yP - y, 2) );
 
-			let props = {
-				posY: 0,
-				rotX: cellWrapper.rotation.x,
-				rotZ: cellWrapper.rotation.z
-			};
+			let { x: rotX, z: rotZ } = cellWrapper.rotation;
+			let props = { posY: 0, rotX, rotZ };
 
 			let tween = new TWEEN.Tween(props);
 
 			tween
 				.to({
-					posY: [ 0, (10-circularDistanceFromImpact) * -0.1 * force, 0 ],
-					rotX: [
-						cellWrapper.rotation.x,
-						cellWrapper.rotation.x + THREE.Math.degToRad((yP - y) * 3 * force),
-						cellWrapper.rotation.x
-					],
-					rotZ: [
-						cellWrapper.rotation.z,
-						cellWrapper.rotation.z + THREE.Math.degToRad((xP - x) * -3 * force),
-						cellWrapper.rotation.z
-					]
-				}, 3000)
-				.delay(circularDistanceFromImpact * 50)
+					posY: [ cellWrapper.position.y, (10-circularDistanceFromImpact) * -0.1 * force, cellWrapper.position.y ],
+					rotX: [ rotX, rotX + THREE.Math.degToRad((yP - y) * 3 * force), rotX ],
+					rotZ: [ rotZ, rotZ + THREE.Math.degToRad((xP - x) * -3 * force), rotZ ]
+				}, 2000)
+				.delay(circularDistanceFromImpact * 20)
 				.easing(TWEEN.Easing.Elastic.Out)
 				.onUpdate(() => {
 					cellWrapper.position.y = props.posY;
