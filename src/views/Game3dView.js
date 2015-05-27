@@ -169,22 +169,23 @@ export default class Game3dView extends View {
 	revealBoard (player) {
 		let cellWrappers = this.board.children;
 		let isHuman = player === this.model.humanPlayer;
-		let angle = isHuman ? Math.PI : 0;
+		let angle = Math.PI; //isHuman ? Math.PI : 0;
 
 		cellWrappers.forEach((cellWrapper, index) => {
 
 			let tween = new TWEEN.Tween(cellWrapper.rotation);
-			let { x, y } = cellWrapper.userData;
+			let { y } = cellWrapper.userData;
 			let s = this.model.boardSize;
-			let circularDistance = Math.sqrt( Math.pow( isHuman ? x : s-x, 2) + Math.pow( isHuman ? y : s-y, 2) );
+			// let circularDistance = Math.sqrt( Math.pow( isHuman ? x : s-x, 2) + Math.pow( isHuman ? y : s-y, 2) );
+			let circularDistance = isHuman ? y : s-y;
 
 			tween
-				.to({ x: angle }, 1000)
-				.delay(30 * circularDistance)
+				.to({ x: String(angle) }, 750)
+				.delay(75 * circularDistance)
 				.easing(TWEEN.Easing.Exponential.Out)
 				.start();
 
-			if (index === cellWrappers.length-1) {
+			if (index === (isHuman ? cellWrappers.length-1 : 0)) {
 				tween.onComplete(() => {
 					this.emit(VIEW_EVENT__BOARD_READY, {
 						player
@@ -411,15 +412,23 @@ export default class Game3dView extends View {
 		return player === this.model.humanPlayer ? 'human': 'computer';
 	}
 
-	render () {
+	render (time) {
 		this.controls.update();
 		TWEEN.update();
 
 		this.board.rotation.y += 0.0005;
 
+		// this.animateCells(time);
+
 		this.renderer.render(this.scene, this.camera);
 
 		window.requestAnimationFrame(this.render.bind(this));
 	}
+
+	/*animateCells (time) {
+		this.board.children.forEach((cellWrapper, index) => {
+			cellWrapper.position.y = Math.sin((time)/1000 + index/30) * 0.2;
+		});
+	}*/
 
 }
