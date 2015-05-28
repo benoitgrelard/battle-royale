@@ -10,8 +10,14 @@ export default class Game extends Model {
 
 	constructor (attributes) {
 		super(Object.assign({
-			humanPlayer: new Player({ name: 'Neo' }),
-			computerPlayer: new Player({ name: 'Agent Smith' }),
+			humanPlayer: new Player({
+				name: 'Neo',
+				type: 'human'
+			}),
+			computerPlayer: new Player({
+				name: 'Agent Smith',
+				type: 'computer'
+			}),
 			boardSize: DEFAULT_BOARD_SIZE
 		}, attributes));
 	}
