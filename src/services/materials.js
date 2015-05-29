@@ -2,19 +2,20 @@ import THREE from 'three';
 
 
 export default {
-	cell: {
-		default: getDefaultCell(),
-		missed: getMissedCell()
+	tile: {
+		default: getDefaultTile(),
+		missed: getMissedTile()
 	},
 	shipPart: {
 		default: getDefaultShipPart(),
 		hit: getHitShipPart(),
 		sunk: getSunkShipPart()
-	}
+	},
+	missile: getMissile()
 };
 
 
-function getDefaultCell() {
+function getDefaultTile() {
 	'use strict';
 
 	return new THREE.MeshLambertMaterial({
@@ -24,7 +25,7 @@ function getDefaultCell() {
 	});
 }
 
-function getMissedCell() {
+function getMissedTile() {
 	'use strict';
 
 	return new THREE.MeshLambertMaterial({
@@ -66,5 +67,16 @@ function getSunkShipPart() {
 		specular: 'rgb(190,190,190)',
 		shininess: 40,
 		shading: THREE.FlatShading
+	});
+}
+
+function getMissile() {
+	'use strict';
+
+	return new THREE.MeshLambertMaterial({
+		color: 0x133111,
+		emissive: 'rgb(5, 10, 4)',
+		shading: THREE.FlatShading,
+		transparent: true
 	});
 }

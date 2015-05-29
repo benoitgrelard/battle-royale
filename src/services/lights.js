@@ -9,30 +9,34 @@ export default {
 function get() {
 	'use strict';
 
-	let ambientLight = new THREE.AmbientLight(0x202020);
+	let ambientLight = new THREE.AmbientLight(0x222222);
 
-	let spotLight = new THREE.SpotLight(0xffffff, 0.65);
-	spotLight.position.set(5, 30, 5);
-	spotLight.castShadow = true;
-	spotLight.shadowDarkness = 0.85;
-	spotLight.shadowCameraNear = 10;
-	spotLight.shadowCameraFar = 40;
-	spotLight.shadowCameraFov = 45;
-	spotLight.shadowMapWidth = 2048;
-	spotLight.shadowMapHeight = 2048;
-	spotLight.shadowBias = 0.001;
-	// spotLight.shadowCameraVisible = true;
+	let topLight = new THREE.SpotLight(0xffffff, 0.65, 50, Math.PI/6, 1);
+	topLight.position.set(5, 30, 5);
+	topLight.castShadow = true;
+	topLight.shadowDarkness = 0.85;
+	topLight.shadowCameraNear = 10;
+	topLight.shadowCameraFar = 40;
+	topLight.shadowCameraFov = 45;
+	topLight.shadowMapWidth = 2048;
+	topLight.shadowMapHeight = 2048;
+	topLight.shadowBias = 0.001;
+	// topLight.shadowCameraVisible = true;
 
-	let spotLight2 = new THREE.SpotLight(0xff0000, 0.3);
-	spotLight2.position.set(-10, 2, 10);
+	let redLight = new THREE.SpotLight(0xff0000, 0.65, 50, Math.PI/8);
+	redLight.position.set(-30, 5, 15);
 
-	let spotLight3 = new THREE.SpotLight(0x0000ff, 0.3);
-	spotLight3.position.set(10, 2, -10);
+	let blueLight = new THREE.SpotLight(0x0000ff, 0.65, 50, Math.PI/8);
+	blueLight.position.set(-30, 5, -15);
+
+	let missileLight = new THREE.PointLight(0x00ff00, 0, 10);
+	missileLight.name = 'missileLight';
 
 	return [
 		ambientLight,
-		spotLight,
-		spotLight2,
-		spotLight3
+		topLight,
+		redLight,
+		blueLight,
+		missileLight
 	];
 }

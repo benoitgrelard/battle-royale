@@ -1,23 +1,27 @@
 import THREE from 'three';
 
 
-export const CELL_SIZE = 1;
-export const CELL_HEIGHT = 1;
+export const TILE_SIZE = 1;
+export const TILE_HEIGHT = 0.5;
 export const SHIP_PART_SIZE = 0.75;
 export default {
-	cell: getCell(),
-	shipPart: getShipPart()
+	tile: getTile(),
+	shipPart: getShipPart(),
+	missile: getMissile()
 };
 
 
-function getCell() {
+function getTile() {
 	'use strict';
-	return new THREE.BoxGeometry(CELL_SIZE, CELL_HEIGHT/2, CELL_SIZE);
+	return new THREE.BoxGeometry(TILE_SIZE, TILE_HEIGHT, TILE_SIZE);
 }
 
 function getShipPart() {
 	'use strict';
-	let geometry = new THREE.IcosahedronGeometry(SHIP_PART_SIZE/2, 1);
-	geometry.computeBoundingBox();
-	return geometry;
+	return new THREE.IcosahedronGeometry(SHIP_PART_SIZE/2, 1);
+}
+
+function getMissile() {
+	'use strict';
+	return new THREE.BoxGeometry(TILE_SIZE, TILE_HEIGHT, TILE_SIZE);
 }
