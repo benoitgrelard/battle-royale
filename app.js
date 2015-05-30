@@ -41270,11 +41270,13 @@ function dropMissile(missileObject, tile) {
 	light.intensity = 0;
 
 	var tweenUp = new _tweenJs2['default'].Tween(missileObject.position).to({ y: '+2' }, 350).easing(_tweenJs2['default'].Easing.Exponential.Out).onUpdate(function () {
+		missile.rotation.y += 0.5;
 		missile.material.opacity += 0.1;
 		light.intensity += 0.3;
 	});
 
 	var tweenDown = new _tweenJs2['default'].Tween(missileObject.position).to({ y: (_servicesGeometries.TILE_HEIGHT + _servicesGeometries.MISSILE_HEIGHT) / 2 }, 400).easing(_tweenJs2['default'].Easing.Exponential.In).onUpdate(function () {
+		missile.rotation.y += 0.1;
 		light.intensity += 0.3;
 	});
 
@@ -41406,7 +41408,7 @@ function getShipPart() {
 
 function getMissile() {
 	'use strict';
-	return new _three2['default'].CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 4, 1);
+	return new _three2['default'].CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
 }
 
 function getMissileLine() {
