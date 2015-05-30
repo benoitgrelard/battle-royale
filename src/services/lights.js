@@ -1,12 +1,17 @@
 import THREE from 'three';
 
 
+export const HIT_SHIP_PART_LIGHT_COLOR = new THREE.Color('red');
+export const SUNK_SHIP_PART_LIGHT_COLOR = new THREE.Color('blue');
+export const SHIP_PART_LIGHT_INTENSITY = 3;
 export default {
-	get
+	makeScene,
+	makeShipPart,
+	makeMissile
 };
 
 
-function get() {
+function makeScene() {
 	'use strict';
 
 	let ambientLight = new THREE.AmbientLight(0x222222);
@@ -29,14 +34,20 @@ function get() {
 	let blueLight = new THREE.SpotLight(0x0000ff, 0.65, 50, Math.PI/8);
 	blueLight.position.set(-30, 5, -15);
 
-	let missileLight = new THREE.PointLight(0x00ff00, 0, 10);
-	missileLight.name = 'missileLight';
-
 	return [
 		ambientLight,
 		topLight,
 		redLight,
-		blueLight,
-		missileLight
+		blueLight
 	];
+}
+
+function makeShipPart() {
+	'use strict';
+	return new THREE.PointLight('white', 0, 2);
+}
+
+function makeMissile() {
+	'use strict';
+	return new THREE.PointLight(0x00ff88, 0, 5);
 }

@@ -1,6 +1,5 @@
 import View from '../lib/View';
 import THREE from 'three';
-import TWEEN from 'tween.js';
 import createOrbitControls from 'three-orbit-controls';
 import Coordinate from '../models/Coordinate';
 import {
@@ -10,9 +9,9 @@ import {
 	VIEW_EVENT__BOARD_READY
 } from '../constants';
 import materials from '../services/materials';
-import { TILE_HEIGHT, SHIP_PART_SIZE } from '../services/geometries';
 import meshes from '../services/meshes';
-import lights from '../services/lights';
+import lights, { HIT_SHIP_PART_LIGHT_COLOR, SUNK_SHIP_PART_LIGHT_COLOR, SHIP_PART_LIGHT_INTENSITY } from '../services/lights';
+import animations from '../services/animations';
 
 
 /**
@@ -38,15 +37,20 @@ export default class Game3dView extends View {
 	getScene () {
 		let scene = new THREE.Scene();
 
-		this.lights = lights.get();
-		scene.add(...this.lights);
+		this.scenelights = lights.makeScene();
+		scene.add(...this.scenelights);
 
 		this.board = meshes.makeBoard(this.model);
 		scene.add(this.board);
 
-		scene.add(new THREE.AxisHelper());
+		this.missile = meshes.makeMissile();
+		this.missile.getObjectByName('missile').visible = false;
+		this.missile.getObjectByName('line').visible = false;
+		scene.add(this.missile);
 
-		/*this.lights.forEach(light => {
+		// scene.add(new THREE.AxisHelper());
+
+		/*this.scenelights.forEach(light => {
 			if (light.type !== 'SpotLight') { return; }
 			scene.add(new THREE.SpotLightHelper(light));
 		});*/
@@ -90,7 +94,7 @@ export default class Game3dView extends View {
 
 	render (time) {
 		this.controls.update();
-		TWEEN.update();
+		animations.update();
 
 		// this.board.rotation.y += 0.001;// 0.00025;
 
@@ -169,35 +173,9 @@ export default class Game3dView extends View {
 		let force = missed ? 0.35 : sunk ? 3 : hit ? 1 : 0;
 
 		let tile = this.getTileAtCoordinate(coordinate, player);
-		let missile = meshes.makeMissile();
+		let completed = animations.dropMissile(this.missile, tile);
 
-		tile.add(missile);
-
-		missile.position.y = 5;
-		missile.material.opacity = 0;
-
-		console.log(missile.localToWorld(missile.position));
-
-		let light = this.lights[4];
-		// light.intensity = 3;
-		// light.position.copy(missile.localToWorld(missile.position));
-		light.position.setFromMatrixPosition(missile.matrixWorld);
-		console.log(light.position);
-
-		new TWEEN.Tween(missile.position)
-			.to({y: TILE_HEIGHT*0.75}, 500)
-			.easing(TWEEN.Easing.Exponential.In)
-			.start()
-			.onUpdate(() => {
-				missile.material.opacity += 0.1;
-				light.intensity += 0.1;
-				light.position.copy(missile.localToWorld(missile.position));
-			})
-			.onComplete(() => {
-
-			light.intensity = 0;
-			tile.remove(missile);
-
+		completed.then(() => {
 			if (missed) {
 				let tile = this.getTileAtCoordinate(coordinate, player);
 				tile.material = materials.tile.missed;
@@ -211,8 +189,8 @@ export default class Game3dView extends View {
 					shipPart.visible = true;
 
 					let light = this.getShipLightAtCoordinate(coordinate, player);
-					light.intensity = 3;
-					light.color = new THREE.Color('blue');
+					light.color = SUNK_SHIP_PART_LIGHT_COLOR;
+					light.intensity = SHIP_PART_LIGHT_INTENSITY;
 
 				});
 			}
@@ -224,67 +202,20 @@ export default class Game3dView extends View {
 				}
 
 				let light = this.getShipLightAtCoordinate(coordinate, player);
-				light.intensity = 3;
+				light.color = HIT_SHIP_PART_LIGHT_COLOR;
+				light.intensity = SHIP_PART_LIGHT_INTENSITY;
 
 				let shipPartGroup = shipPart.parent;
-				shipPartGroup.position.y -= SHIP_PART_SIZE;
-				let relativeUp = 1+SHIP_PART_SIZE;
-				let relativeDown = 1;
-				this.animateJump(shipPartGroup, relativeUp, relativeDown, 50);
+				animations.discoverShipPart(shipPartGroup);
 			}
 
-			let { x: xP, y: yP } = coordinate;
-			let cells = this.board.children;
-			cells.forEach((cell, index) => {
-
-				let { x, y } = cell.userData;
-				let circularDistanceFromImpact = Math.sqrt( Math.pow(xP - x, 2) + Math.pow(yP - y, 2) );
-
-				let { x: rotX, z: rotZ } = cell.rotation;
-				let props = { posY: 0, rotX, rotZ };
-
-				let tween = new TWEEN.Tween(props);
-
-				tween
-					.to({
-						posY: [ cell.position.y, (10-circularDistanceFromImpact) * -0.1 * force, cell.position.y ],
-						rotX: [ rotX, rotX + THREE.Math.degToRad((yP - y) * 3 * force), rotX ],
-						rotZ: [ rotZ, rotZ + THREE.Math.degToRad((xP - x) * -3 * force), rotZ ]
-					}, 2000)
-					.delay(circularDistanceFromImpact * 20)
-					.easing(TWEEN.Easing.Elastic.Out)
-					.onUpdate(() => {
-						cell.position.y = props.posY;
-						cell.rotation.x = props.rotX;
-						cell.rotation.z = props.rotZ;
-					})
-					.start();
-
-				/*if (index === cells.length-1) {
-					tween.onComplete(() => {
-						this.emit(VIEW_EVENT__SHOT_COMPLETED, {
-							player
-						});
-					});
-				}*/
-
+			let completed = animations.shakeBoard(this.board, coordinate, force);
+			completed.then(() => {
+				this.emit(VIEW_EVENT__SHOT_COMPLETED, {
+					player
+				});
 			});
-
 		});
-	}
-
-	animateJump (object, upRelative, downRelative=upRelative, delay=0) {
-
-		new TWEEN.Tween(object.position)
-			.to({y: String(upRelative)}, 200)
-			.easing(TWEEN.Easing.Sinusoidal.Out)
-			.delay(delay)
-			.start()
-			.chain(
-				new TWEEN.Tween(object.position)
-					.to({y: String(-downRelative)}, 400)
-					.easing(TWEEN.Easing.Bounce.Out)
-			);
 	}
 
 	onPlayerActivationChanged (eventName, data, player) {
@@ -295,36 +226,12 @@ export default class Game3dView extends View {
 	}
 
 	onPlayerActivated (player) {
-		this.revealBoard(player);
-	}
+		let completed = animations.revealBoard(this.board, player);
 
-	revealBoard (player) {
-		let cells = this.board.children;
-		let isHuman = player === this.model.humanPlayer;
-		let angle = isHuman ? Math.PI : -Math.PI;
-
-		cells.forEach((cell, index) => {
-
-			let tween = new TWEEN.Tween(cell.rotation);
-			let { x, y } = cell.userData;
-			let s = this.model.boardSize;
-			let circularDistance = Math.sqrt( Math.pow( isHuman ? x : s-x, 2) + Math.pow( isHuman ? y : s-y, 2) );
-			// let circularDistance = isHuman ? y : s-y;
-
-			tween
-				.to({ x: String(angle) }, 750)
-				.delay(75 * circularDistance)
-				.easing(TWEEN.Easing.Exponential.Out)
-				.start();
-
-			if (index === (isHuman ? cells.length-1 : 0)) {
-				tween.onComplete(() => {
-					this.emit(VIEW_EVENT__BOARD_READY, {
-						player
-					});
-				});
-			}
-
+		completed.then(() => {
+			this.emit(VIEW_EVENT__BOARD_READY, {
+				player
+			});
 		});
 	}
 

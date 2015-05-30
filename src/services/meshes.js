@@ -1,6 +1,7 @@
 import THREE from 'three';
 import geometries, { TILE_SIZE, TILE_HEIGHT, SHIP_PART_SIZE } from './geometries';
 import materials from './materials';
+import lights from './lights';
 import Coordinate from '../models/Coordinate';
 
 
@@ -101,7 +102,7 @@ function makeShipPart(playerModel, x, y) {
 	shipPartMesh.visible = playerModel.type === 'human';
 	shipPartObject.add(shipPartMesh);
 
-	let light = new THREE.PointLight(0xff0000, 0, 2);
+	let light = lights.makeShipPart();
 	light.name = 'light';
 	shipPartObject.add(light);
 
@@ -113,8 +114,19 @@ function makeShipPart(playerModel, x, y) {
 function makeMissile() {
 	'use strict';
 
+	let missileObject = new THREE.Group();
+
 	let missileMesh = new THREE.Mesh(geometries.missile, materials.missile);
 	missileMesh.name = 'missile';
+	missileObject.add(missileMesh);
 
-	return missileMesh;
+	let line = new THREE.Line(geometries.missileLine, materials.missileLine);
+	line.name = 'line';
+	missileObject.add(line);
+
+	let light = lights.makeMissile();
+	light.name = 'light';
+	missileObject.add(light);
+
+	return missileObject;
 }
