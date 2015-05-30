@@ -93,6 +93,7 @@ function dropMissile (missileObject, tile) {
 		.to({ y: '+2' }, 350)
 		.easing(TWEEN.Easing.Exponential.Out)
 		.onUpdate(() => {
+			missile.rotation.y += 0.5;
 			missile.material.opacity += 0.1;
 			light.intensity += 0.3;
 		});
@@ -101,6 +102,7 @@ function dropMissile (missileObject, tile) {
 		.to({y: (TILE_HEIGHT + MISSILE_HEIGHT)/2}, 400)
 		.easing(TWEEN.Easing.Exponential.In)
 		.onUpdate(() => {
+			missile.rotation.y += 0.1;
 			light.intensity += 0.3;
 		});
 

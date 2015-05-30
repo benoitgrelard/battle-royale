@@ -26,7 +26,7 @@ function getShipPart() {
 
 function getMissile() {
 	'use strict';
-	return new THREE.CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 4, 1);
+	return new THREE.CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
 }
 
 function getMissileLine() {
