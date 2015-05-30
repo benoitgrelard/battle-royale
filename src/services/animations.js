@@ -1,10 +1,12 @@
 import THREE from 'three';
 import TWEEN from 'tween.js';
 import { TILE_HEIGHT, SHIP_PART_SIZE, MISSILE_HEIGHT } from '../services/geometries';
+import { MISSILE_DROP_HEIGHT } from '../services/meshes';
 
 
 export default {
 	update,
+	hoverBoard,
 	revealBoard,
 	dropMissile,
 	discoverShipPart,
@@ -17,11 +19,25 @@ function update () {
 	TWEEN.update();
 }
 
+function hoverBoard (board, time) {
+	'use strict';
+
+	board.rotation.y += 0.00025;
+	let size = Math.sqrt(board.children.length);
+
+	board.children.forEach((cellPivot, index) => {
+		let cell = cellPivot.getObjectByName('cell');
+		let { x, y } = cell.userData;
+		let circularDistance = Math.sqrt( Math.pow(size-x, 2) + Math.pow(size-y, 2) );
+		cellPivot.position.y = Math.sin(time/1000 + circularDistance) * 0.1;
+	});
+}
+
 function revealBoard (board, playerModel) {
 	'use strict';
 
 	let promise = new Promise((resolve, reject) => {
-		let cells = board.children;
+		let cells = board.children.map(cellPivot => cellPivot.getObjectByName('cell'));
 		let isHuman = playerModel.type === 'human';
 		let angle = isHuman ? Math.PI : -Math.PI;
 
@@ -50,31 +66,52 @@ function revealBoard (board, playerModel) {
 	}
 }
 
-function dropMissile (missile, tile) {
+function dropMissile (missileObject, tile) {
 	'use strict';
 
-	missile.position.copy(tile.parent.localToWorld(tile.position.clone()));
-	missile.position.y = 5;
-	missile.getObjectByName('missile').material.opacity = 0;
-	missile.getObjectByName('missile').visible = true;
-	missile.getObjectByName('line').visible = true;
+	let missile = missileObject.getObjectByName('missile');
+	let line = missileObject.getObjectByName('line');
+	let light = missileObject.getObjectByName('light');
 
-	missile.getObjectByName('light').intensity = 0.5;
+	missileObject.position.copy(tile.parent.localToWorld(tile.position.clone()));
+	missileObject.position.y = MISSILE_DROP_HEIGHT-2;
 
-	let tween = new TWEEN.Tween(missile.position)
-		.to({y: (TILE_HEIGHT + MISSILE_HEIGHT)/2}, 500)
-		.easing(TWEEN.Easing.Exponential.In)
-		.start()
+	missile.material.opacity = 0;
+	missile.visible = true;
+
+	line.visible = true;
+	line.material.linewidth = 0.1;
+	let props = { width: line.material.linewidth };
+	new TWEEN.Tween(props)
+		.to({ width: [3, 0.1] }, 700)
+		.onUpdate(() => line.material.linewidth = props.width)
+		.start();
+
+	light.intensity = 0;
+
+	let tweenUp = new TWEEN.Tween(missileObject.position)
+		.to({ y: '+2' }, 350)
+		.easing(TWEEN.Easing.Exponential.Out)
 		.onUpdate(() => {
-			missile.getObjectByName('missile').material.opacity += 0.1;
-			missile.getObjectByName('light').intensity += 0.3;
+			missile.material.opacity += 0.1;
+			light.intensity += 0.3;
 		});
 
+	let tweenDown = new TWEEN.Tween(missileObject.position)
+		.to({y: (TILE_HEIGHT + MISSILE_HEIGHT)/2}, 400)
+		.easing(TWEEN.Easing.Exponential.In)
+		.onUpdate(() => {
+			light.intensity += 0.3;
+		});
+
+	tweenUp.chain(tweenDown);
+	tweenUp.start();
+
 	let promise = new Promise((resolve, reject) => {
-		tween.onComplete(() => {
-			missile.getObjectByName('light').intensity = 0;
-			missile.getObjectByName('missile').visible = false;
-			missile.getObjectByName('line').visible = false;
+		tweenDown.onComplete(() => {
+			light.intensity = 0;
+			missile.visible = false;
+			line.visible = false;
 			resolve();
 		});
 	});
@@ -112,7 +149,7 @@ function shakeBoard (board, impactCoordinate, force) {
 	'use strict';
 
 	let promise = new Promise((resolve, reject) => {
-		let cells = board.children;
+		let cells = board.children.map(cellPivot => cellPivot.getObjectByName('cell'));
 		cells.forEach((cell, index) => animateCell(cell, index, impactCoordinate, force, cells, resolve));
 	});
 

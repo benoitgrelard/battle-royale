@@ -34,8 +34,8 @@ function getMissileLine() {
 
 	let lineGeometry = new THREE.Geometry();
 	lineGeometry.vertices.push(
-		new THREE.Vector3(0, 1000, 0),
-		new THREE.Vector3(0, -1000, 0)
+		new THREE.Vector3(0, 100, 0),
+		new THREE.Vector3(0, -100, 0)
 	);
 
 	return lineGeometry;

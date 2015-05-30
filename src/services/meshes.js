@@ -6,6 +6,7 @@ import Coordinate from '../models/Coordinate';
 
 
 export const CELL_GAP = 0.5;
+export const MISSILE_DROP_HEIGHT = 5;
 export default {
 	makeBoard,
 	makeCell,
@@ -46,6 +47,9 @@ function makeBoard(gameModel) {
 function makeCell(gameModel, x, y) {
 	'use strict';
 
+	let cellPivot = new THREE.Group();
+	cellPivot.name = 'cellPivot';
+
 	let cellObject = new THREE.Group();
 	cellObject.name = 'cell';
 	cellObject.userData = { x, y };
@@ -55,8 +59,9 @@ function makeCell(gameModel, x, y) {
 	computerCellSide.rotateX(Math.PI);
 
 	cellObject.add(humanCellSide, computerCellSide);
+	cellPivot.add(cellObject);
 
-	return cellObject;
+	return cellPivot;
 }
 
 function makeCellSide(playerModel, x, y) {
@@ -122,6 +127,7 @@ function makeMissile() {
 
 	let line = new THREE.Line(geometries.missileLine, materials.missileLine);
 	line.name = 'line';
+	line.translateY(-MISSILE_DROP_HEIGHT);
 	missileObject.add(line);
 
 	let light = lights.makeMissile();

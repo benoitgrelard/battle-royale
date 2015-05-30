@@ -48,6 +48,9 @@ export default class Game3dView extends View {
 		this.missile.getObjectByName('line').visible = false;
 		scene.add(this.missile);
 
+		this.fog = new THREE.FogExp2(0x111111, 0.025);
+		scene.fog = this.fog;
+
 		// scene.add(new THREE.AxisHelper());
 
 		/*this.scenelights.forEach(light => {
@@ -81,6 +84,7 @@ export default class Game3dView extends View {
 		renderer.shadowMapEnabled = true;
 		renderer.shadowMapType = THREE.PCFShadowMap;
 
+		// renderer.setPixelRatio(window.devicePixelRatio);
 		renderer.setSize(window.innerWidth, window.innerHeight);
 
 		window.addEventListener('resize', () => {
@@ -96,19 +100,11 @@ export default class Game3dView extends View {
 		this.controls.update();
 		animations.update();
 
-		// this.board.rotation.y += 0.001;// 0.00025;
-
-		// this.animateCells(time);
+		animations.hoverBoard(this.board, time);
 
 		this.renderer.render(this.scene, this.camera);
 
 		window.requestAnimationFrame(this.render.bind(this));
-	}
-
-	animateCells (time) {
-		this.board.children.forEach((cell, index) => {
-			cell.position.y = Math.sin((time)/1000 + index/30) * 0.2;
-		});
 	}
 
 	addEventListeners () {
@@ -170,7 +166,7 @@ export default class Game3dView extends View {
 	onPlayerShot (eventName, data, player) {
 		let { coordinate, hit, sunk, ship } = data;
 		let missed = !hit;
-		let force = missed ? 0.35 : sunk ? 3 : hit ? 1 : 0;
+		let force = missed ? 1 : sunk ? 6 : hit ? 3 : 0;
 
 		let tile = this.getTileAtCoordinate(coordinate, player);
 		let completed = animations.dropMissile(this.missile, tile);
@@ -236,7 +232,8 @@ export default class Game3dView extends View {
 	}
 
 	getCellAtCoordinate (coordinate) {
-		return this.board.children.filter(cell => {
+		return this.board.children.filter(cellPivot => {
+			let cell = cellPivot.getObjectByName('cell');
 			return cell.userData.x === coordinate.x && cell.userData.y === coordinate.y;
 		})[0];
 	}
