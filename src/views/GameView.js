@@ -23,12 +23,14 @@ export default class GameView extends View {
 		// model events
 		this.model.humanPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 		this.model.computerPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
-		this.model.humanPlayer.on('changed:activated', () => this.render());
-		this.model.computerPlayer.on('changed:activated', () => this.render());
+		this.model.humanPlayer.on('changed:isActive', this.onPlayerActivationChanged.bind(this));
+		this.model.computerPlayer.on('changed:isActive', this.onPlayerActivationChanged.bind(this));
+		this.model.humanPlayer.on('changed:canPlay', this.render.bind(this));
+		this.model.computerPlayer.on('changed:canPlay', this.render.bind(this));
 	}
 
 	handleBoardCellClicked (event) {
-		if (!this.model.humanPlayer.activated) { return; }
+		if (!this.model.humanPlayer.canPlay) { return; }
 
 		let cellElement = event.target;
 		let { x, y } = cellElement.dataset;
@@ -48,6 +50,11 @@ export default class GameView extends View {
 		this.emit(VIEW_EVENT__BOARD_READY, {
 			player
 		});
+	}
+
+	onPlayerActivationChanged (eventName, data, player) {
+		let isActive = data.newValue;
+		player.canPlay = isActive;
 	}
 
 	render () {
@@ -74,7 +81,7 @@ export default class GameView extends View {
 		let board = player.board;
 		let output = '';
 		let typeModifer = player === this.model.humanPlayer ? '-human' : '-computer';
-		let playableModifier = player.activated ? '' : '-playable';
+		let playableModifier = player.canPlay ? '' : '-playable';
 
 		output += `<div class="Board ${typeModifer} ${playableModifier}">`;
 

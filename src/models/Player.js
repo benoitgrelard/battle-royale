@@ -24,7 +24,8 @@ export default class Player extends Model {
 				new Ship({ name: 'Submarine', size: 3 }),
 				new Ship({ name: 'Patrol Boat', size: 2 })
 			],
-			activated: false
+			isActive: false,
+			canPlay: false
 		}, attributes));
 
 		this.deployFleet();
@@ -56,7 +57,7 @@ export default class Player extends Model {
 	}
 
 	takeHit (coordinate) {
-		if (this.activated) { return; }
+		if (this.isActive) { return; }
 		return this.board.takeHit(coordinate);
 	}
 

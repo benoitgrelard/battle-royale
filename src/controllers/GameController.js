@@ -49,7 +49,7 @@ export default class GameController {
 	}
 
 	onBoardReady (eventName, data) {
-		if (this.isComputer(data.player)) {
+		if (this.isComputer(data.player) && data.player.canPlay) {
 			let coordinate = this.ai.chooseCoordinate();
 
 			setTimeout(() => {
@@ -62,8 +62,8 @@ export default class GameController {
 
 	giveTurnTo (player) {
 		if (this.verbose) { window.console.log(`${player.name}’s turn!`); }
-		this.getOpponent(player).activated = false;
-		player.activated = true;
+		this.getOpponent(player).isActive = false;
+		player.isActive = true;
 	}
 
 	getOpponent (player) {
@@ -78,8 +78,8 @@ export default class GameController {
 
 		window.alert((humanPlayerIsSunk ? this.model.computerPlayer : this.model.humanPlayer).name + ' wins!');
 
-		this.model.humanPlayer.activated = false;
-		this.model.computerPlayer.activated = false;
+		this.model.humanPlayer.isActive = false;
+		this.model.computerPlayer.isActive = false;
 
 		return true;
 	}
