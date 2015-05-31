@@ -28,8 +28,8 @@ function hoverBoard (board, time) {
 		let cell = cellPivot.getObjectByName('cell');
 		let { x, y } = cell.userData;
 		cellPivot.position.y = Math.sin(time/1000 + (x+y)/5) * 0.25;
-		cellPivot.rotation.x = Math.sin(time/1000 + (x+y)/5) * -0.1;
-		cellPivot.rotation.z = Math.sin(time/1000 + (x+y)/5) * -0.1;
+		// cellPivot.rotation.x = Math.sin(time/1000 + (x+y)/5) * -0.05;
+		// cellPivot.rotation.z = Math.sin(time/1000 + (x+y)/5) * -0.05;
 	});
 }
 
@@ -49,15 +49,14 @@ function revealBoard (board, playerModel) {
 
 
 	function animateCell (cells, cell, index, isHuman, angle, resolve) {
-		let tween = new TWEEN.Tween(cell.rotation);
 		let { x, y } = cell.userData;
 		let size = Math.sqrt(cells.length);
 		let circularDistance = Math.sqrt( Math.pow( isHuman ? x : size-x, 2) + Math.pow( isHuman ? y : size-y, 2) );
 
-		tween
-			.to({ x: String(angle) }, 750)
-			.delay(75 * circularDistance)
-			.easing(TWEEN.Easing.Exponential.Out)
+		let tween = new TWEEN.Tween(cell.rotation)
+			.to({ x: String(angle) }, 2000)
+			.delay(20 * circularDistance)
+			.easing(TWEEN.Easing.Elastic.Out)
 			.start();
 
 		if (index === (isHuman ? cells.length-1 : 0)) {
@@ -170,8 +169,8 @@ function shakeBoard (board, impactCoordinate, force) {
 		let tween = new TWEEN.Tween(props)
 			.to({
 				posY: [ cell.position.y, (10-circularDistanceFromImpact) * -0.1 * force, cell.position.y ],
-				rotX: [ rotX, rotX + THREE.Math.degToRad((yP - y) * 3 * force), rotX ],
-				rotZ: [ rotZ, rotZ + THREE.Math.degToRad((xP - x) * -3 * force), rotZ ]
+				rotX: [ rotX, rotX + THREE.Math.degToRad((yP - y) * 2 * force), rotX ],
+				rotZ: [ rotZ, rotZ + THREE.Math.degToRad((xP - x) * 2 * force), rotZ ]
 			}, 2000)
 			.delay(circularDistanceFromImpact * 20)
 			.easing(TWEEN.Easing.Elastic.Out)
