@@ -38,7 +38,7 @@ body {
 	align-content: space-between;
 	flex-direction: row;
 
-	opacity: 0.5;
+	opacity: 0.1;
 	pointer-events: none;
 }
 .Board.-playable {
