@@ -40134,7 +40134,7 @@ var GameController = (function () {
 		value: function onBoardReady(eventName, data) {
 			var _this2 = this;
 
-			if (this.isComputer(data.player)) {
+			if (this.isComputer(data.player) && data.player.canPlay) {
 				(function () {
 					var coordinate = _this2.ai.chooseCoordinate();
 
@@ -40154,8 +40154,8 @@ var GameController = (function () {
 			if (this.verbose) {
 				window.console.log('' + player.name + '’s turn!');
 			}
-			this.getOpponent(player).activated = false;
-			player.activated = true;
+			this.getOpponent(player).isActive = false;
+			player.isActive = true;
 		}
 	}, {
 		key: 'getOpponent',
@@ -40174,8 +40174,8 @@ var GameController = (function () {
 
 			window.alert((humanPlayerIsSunk ? this.model.computerPlayer : this.model.humanPlayer).name + ' wins!');
 
-			this.model.humanPlayer.activated = false;
-			this.model.computerPlayer.activated = false;
+			this.model.humanPlayer.isActive = false;
+			this.model.computerPlayer.isActive = false;
 
 			return true;
 		}
@@ -40951,7 +40951,8 @@ var Player = (function (_Model) {
 			boardSize: _Board.DEFAULT_BOARD_SIZE,
 			board: new _Board2['default']({ size: _Board.DEFAULT_BOARD_SIZE }),
 			fleet: [new _Ship2['default']({ name: 'Aircraft Carrier', size: 5 }), new _Ship2['default']({ name: 'Battleship', size: 4 }), new _Ship2['default']({ name: 'Destroyer', size: 3 }), new _Ship2['default']({ name: 'Submarine', size: 3 }), new _Ship2['default']({ name: 'Patrol Boat', size: 2 })],
-			activated: false
+			isActive: false,
+			canPlay: false
 		}, attributes));
 
 		this.deployFleet();
@@ -40991,7 +40992,7 @@ var Player = (function (_Model) {
 	}, {
 		key: 'takeHit',
 		value: function takeHit(coordinate) {
-			if (this.activated) {
+			if (this.isActive) {
 				return;
 			}
 			return this.board.takeHit(coordinate);
@@ -41198,7 +41199,6 @@ function hoverBoard(board, time) {
 	'use strict';
 
 	board.rotation.y += 0.00025;
-	var size = Math.sqrt(board.children.length);
 
 	board.children.forEach(function (cellPivot, index) {
 		var cell = cellPivot.getObjectByName('cell');
@@ -41206,8 +41206,9 @@ function hoverBoard(board, time) {
 		var x = _cell$userData.x;
 		var y = _cell$userData.y;
 
-		var circularDistance = Math.sqrt(Math.pow(size - x, 2) + Math.pow(size - y, 2));
-		cellPivot.position.y = Math.sin(time / 1000 + circularDistance) * 0.1;
+		cellPivot.position.y = Math.sin(time / 1000 + (x + y) / 5) * 0.25;
+		// cellPivot.rotation.x = Math.sin(time/1000 + (x+y)/5) * -0.05;
+		// cellPivot.rotation.z = Math.sin(time/1000 + (x+y)/5) * -0.05;
 	});
 }
 
@@ -41229,7 +41230,6 @@ function revealBoard(board, playerModel) {
 	return promise;
 
 	function animateCell(cells, cell, index, isHuman, angle, resolve) {
-		var tween = new _tweenJs2['default'].Tween(cell.rotation);
 		var _cell$userData2 = cell.userData;
 		var x = _cell$userData2.x;
 		var y = _cell$userData2.y;
@@ -41237,7 +41237,7 @@ function revealBoard(board, playerModel) {
 		var size = Math.sqrt(cells.length);
 		var circularDistance = Math.sqrt(Math.pow(isHuman ? x : size - x, 2) + Math.pow(isHuman ? y : size - y, 2));
 
-		tween.to({ x: String(angle) }, 750).delay(75 * circularDistance).easing(_tweenJs2['default'].Easing.Exponential.Out).start();
+		var tween = new _tweenJs2['default'].Tween(cell.rotation).to({ x: String(angle) }, 2000).delay(20 * circularDistance).easing(_tweenJs2['default'].Easing.Elastic.Out).start();
 
 		if (index === (isHuman ? cells.length - 1 : 0)) {
 			tween.onComplete(function () {
@@ -41349,8 +41349,8 @@ function shakeBoard(board, impactCoordinate, force) {
 
 		var tween = new _tweenJs2['default'].Tween(props).to({
 			posY: [cell.position.y, (10 - circularDistanceFromImpact) * -0.1 * force, cell.position.y],
-			rotX: [rotX, rotX + _three2['default'].Math.degToRad((yP - y) * 3 * force), rotX],
-			rotZ: [rotZ, rotZ + _three2['default'].Math.degToRad((xP - x) * -3 * force), rotZ]
+			rotX: [rotX, rotX + _three2['default'].Math.degToRad((yP - y) * 2 * force), rotX],
+			rotZ: [rotZ, rotZ + _three2['default'].Math.degToRad((xP - x) * 2 * force), rotZ]
 		}, 2000).delay(circularDistanceFromImpact * 20).easing(_tweenJs2['default'].Easing.Elastic.Out).onUpdate(function () {
 			cell.position.y = props.posY;
 			cell.rotation.x = props.rotX;
@@ -41842,7 +41842,7 @@ var Game3dView = (function (_View) {
 			this.missile.getObjectByName('line').visible = false;
 			scene.add(this.missile);
 
-			this.fog = new _three2['default'].FogExp2(1118481, 0.025);
+			this.fog = new _three2['default'].FogExp2(1118481, 0.02);
 			scene.fog = this.fog;
 
 			// scene.add(new THREE.AxisHelper());
@@ -41914,14 +41914,14 @@ var Game3dView = (function (_View) {
 			// model events
 			this.model.humanPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 			this.model.computerPlayer.on(_constants.MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
-			this.model.humanPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
-			this.model.computerPlayer.on('changed:activated', this.onPlayerActivationChanged.bind(this));
+			this.model.humanPlayer.on('changed:isActive', this.onPlayerActivationChanged.bind(this));
+			this.model.computerPlayer.on('changed:isActive', this.onPlayerActivationChanged.bind(this));
 		}
 	}, {
 		key: 'handleMouseMovedOverView',
 		value: function handleMouseMovedOverView(event) {
 			this.rootElement.style.cursor = 'default';
-			if (!this.model.humanPlayer.activated) {
+			if (!this.model.humanPlayer.canPlay) {
 				return;
 			}
 
@@ -41932,7 +41932,7 @@ var Game3dView = (function (_View) {
 	}, {
 		key: 'handleViewClicked',
 		value: function handleViewClicked(event) {
-			if (!this.model.humanPlayer.activated) {
+			if (!this.model.humanPlayer.canPlay) {
 				return;
 			}
 
@@ -41949,6 +41949,8 @@ var Game3dView = (function (_View) {
 			this.emit(_constants.VIEW_EVENT__SHOOT_REQUESTED, {
 				coordinate: new _modelsCoordinate2['default']({ x: x, y: y })
 			});
+
+			this.model.humanPlayer.canPlay = false;
 		}
 	}, {
 		key: 'getIntersectedComputerCellSideFromEvent',
@@ -42029,8 +42031,9 @@ var Game3dView = (function (_View) {
 	}, {
 		key: 'onPlayerActivationChanged',
 		value: function onPlayerActivationChanged(eventName, data, player) {
-			var isActive = data.newValue === true;
+			var isActive = data.newValue;
 			if (!isActive) {
+				player.canPlay = false;
 				return;
 			}
 
@@ -42044,6 +42047,7 @@ var Game3dView = (function (_View) {
 			var completed = _servicesAnimations2['default'].revealBoard(this.board, player);
 
 			completed.then(function () {
+				player.canPlay = true;
 				_this2.emit(_constants.VIEW_EVENT__BOARD_READY, {
 					player: player
 				});
