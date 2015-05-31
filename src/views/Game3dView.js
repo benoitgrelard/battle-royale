@@ -48,7 +48,7 @@ export default class Game3dView extends View {
 		this.missile.getObjectByName('line').visible = false;
 		scene.add(this.missile);
 
-		this.fog = new THREE.FogExp2(0x111111, 0.025);
+		this.fog = new THREE.FogExp2(0x111111, 0.02);
 		scene.fog = this.fog;
 
 		// scene.add(new THREE.AxisHelper());

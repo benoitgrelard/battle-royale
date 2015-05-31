@@ -23,13 +23,13 @@ function hoverBoard (board, time) {
 	'use strict';
 
 	board.rotation.y += 0.00025;
-	let size = Math.sqrt(board.children.length);
 
 	board.children.forEach((cellPivot, index) => {
 		let cell = cellPivot.getObjectByName('cell');
 		let { x, y } = cell.userData;
-		let circularDistance = Math.sqrt( Math.pow(size-x, 2) + Math.pow(size-y, 2) );
-		cellPivot.position.y = Math.sin(time/1000 + circularDistance) * 0.1;
+		cellPivot.position.y = Math.sin(time/1000 + (x+y)/5) * 0.5;
+		cellPivot.rotation.x = Math.sin(time/1000 + (x+y)/5) * -0.1;
+		cellPivot.rotation.z = Math.sin(time/1000 + (x+y)/5) * -0.1;
 	});
 }
 
