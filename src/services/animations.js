@@ -27,7 +27,7 @@ function hoverBoard (board, time) {
 	board.children.forEach((cellPivot, index) => {
 		let cell = cellPivot.getObjectByName('cell');
 		let { x, y } = cell.userData;
-		cellPivot.position.y = Math.sin(time/1000 + (x+y)/5) * 0.5;
+		cellPivot.position.y = Math.sin(time/1000 + (x+y)/5) * 0.25;
 		cellPivot.rotation.x = Math.sin(time/1000 + (x+y)/5) * -0.1;
 		cellPivot.rotation.z = Math.sin(time/1000 + (x+y)/5) * -0.1;
 	});
