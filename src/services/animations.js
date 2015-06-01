@@ -13,6 +13,8 @@ export default {
 	shakeBoard
 };
 
+export const ANIMATION_SPEED_FACTOR = 1;
+
 
 function update () {
 	'use strict';
@@ -54,8 +56,8 @@ function revealBoard (board, playerModel) {
 		let circularDistance = Math.sqrt( Math.pow( isHuman ? x : size-x, 2) + Math.pow( isHuman ? y : size-y, 2) );
 
 		let tween = new TWEEN.Tween(cell.rotation)
-			.to({ x: String(angle) }, 2000)
-			.delay(20 * circularDistance)
+			.to({ x: String(angle) }, 2000 / ANIMATION_SPEED_FACTOR)
+			.delay(circularDistance * 20 / ANIMATION_SPEED_FACTOR)
 			.easing(TWEEN.Easing.Elastic.Out)
 			.start();
 
@@ -82,14 +84,14 @@ function dropMissile (missileObject, tile) {
 	line.material.linewidth = 0.1;
 	let props = { width: line.material.linewidth };
 	new TWEEN.Tween(props)
-		.to({ width: [3, 0.1] }, 700)
+		.to({ width: [3, 0.1] }, 700 / ANIMATION_SPEED_FACTOR)
 		.onUpdate(() => line.material.linewidth = props.width)
 		.start();
 
 	light.intensity = 0;
 
 	let tweenUp = new TWEEN.Tween(missileObject.position)
-		.to({ y: '+2' }, 350)
+		.to({ y: '+2' }, 350 / ANIMATION_SPEED_FACTOR)
 		.easing(TWEEN.Easing.Exponential.Out)
 		.onUpdate(() => {
 			missile.rotation.y += 0.5;
@@ -98,7 +100,7 @@ function dropMissile (missileObject, tile) {
 		});
 
 	let tweenDown = new TWEEN.Tween(missileObject.position)
-		.to({y: (TILE_HEIGHT + MISSILE_HEIGHT)/2}, 400)
+		.to({y: (TILE_HEIGHT + MISSILE_HEIGHT)/2}, 400 / ANIMATION_SPEED_FACTOR)
 		.easing(TWEEN.Easing.Exponential.In)
 		.onUpdate(() => {
 			missile.rotation.y += 0.1;
@@ -129,12 +131,12 @@ function discoverShipPart (shipPartGroup) {
 	let relativeDown = 1;
 
 	let tweenUp = new TWEEN.Tween(shipPartGroup.position)
-		.to({y: String(relativeUp)}, 200)
+		.to({y: String(relativeUp)}, 200 / ANIMATION_SPEED_FACTOR)
 		.easing(TWEEN.Easing.Sinusoidal.Out)
-		.delay(50);
+		.delay(50 / ANIMATION_SPEED_FACTOR);
 
 	let tweenDown = new TWEEN.Tween(shipPartGroup.position)
-		.to({y: String(-relativeDown)}, 400)
+		.to({y: String(-relativeDown)}, 400 / ANIMATION_SPEED_FACTOR)
 		.easing(TWEEN.Easing.Bounce.Out);
 
 	tweenUp.chain(tweenDown).start();
@@ -171,8 +173,8 @@ function shakeBoard (board, impactCoordinate, force) {
 				posY: [ cell.position.y, (10-circularDistanceFromImpact) * -0.1 * force, cell.position.y ],
 				rotX: [ rotX, rotX + THREE.Math.degToRad((yP - y) * 2 * force), rotX ],
 				rotZ: [ rotZ, rotZ + THREE.Math.degToRad((xP - x) * 2 * force), rotZ ]
-			}, 2000)
-			.delay(circularDistanceFromImpact * 20)
+			}, 2000 / ANIMATION_SPEED_FACTOR)
+			.delay(circularDistanceFromImpact * 20 / ANIMATION_SPEED_FACTOR)
 			.easing(TWEEN.Easing.Elastic.Out)
 			.onUpdate(() => {
 				cell.position.y = props.posY;
