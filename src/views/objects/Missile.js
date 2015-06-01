@@ -14,6 +14,8 @@ export default class Missile extends THREE.Group {
 	constructor () {
 		super();
 
+		this.name = 'missile';
+
 		this.body = new THREE.Mesh(Missile.getBodyGeometry(), Missile.getBodyMaterial());
 		this.body.name = 'body';
 		this.add(this.body);

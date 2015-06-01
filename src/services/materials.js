@@ -5,11 +5,6 @@ export default {
 	tile: {
 		default: getDefaultTile(),
 		missed: getMissedTile()
-	},
-	shipPart: {
-		default: getDefaultShipPart(),
-		hit: getHitShipPart(),
-		sunk: getSunkShipPart()
 	}
 };
 
@@ -33,41 +28,5 @@ function getMissedTile() {
 		shading: THREE.FlatShading,
 		transparent: true,
 		opacity: 0.2
-	});
-}
-
-function getDefaultShipPart() {
-	'use strict';
-
-	return new THREE.MeshPhongMaterial({
-		color: 'white',
-		emissive: 'rgb(5, 1, 4)',
-		specular: 'rgb(190,190,190)',
-		shininess: 40,
-		shading: THREE.FlatShading
-	});
-}
-
-function getHitShipPart() {
-	'use strict';
-
-	return new THREE.MeshPhongMaterial({
-		color: 'red',
-		emissive: 'rgb(40, 8, 30)',
-		specular: 'rgb(190,190,190)',
-		shininess: 40,
-		shading: THREE.FlatShading,
-	});
-}
-
-function getSunkShipPart() {
-	'use strict';
-
-	return new THREE.MeshPhongMaterial({
-		color: 0x111111,
-		emissive: 'rgb(5, 1, 4)',
-		specular: 'rgb(190,190,190)',
-		shininess: 40,
-		shading: THREE.FlatShading
 	});
 }

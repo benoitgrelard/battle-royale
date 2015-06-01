@@ -1,8 +1,8 @@
 import THREE from 'three';
-import geometries, { TILE_SIZE, TILE_HEIGHT, SHIP_PART_SIZE } from './geometries';
+import geometries, { TILE_SIZE, TILE_HEIGHT } from './geometries';
 import materials from './materials';
-import lights from './lights';
 import Coordinate from '../models/Coordinate';
+import ShipPart from '../views/objects/ShipPart';
 
 
 export const CELL_GAP = 0.5;
@@ -10,8 +10,7 @@ export default {
 	makeBoard,
 	makeCell,
 	makeCellSide,
-	makeTile,
-	makeShipPart
+	makeTile
 };
 
 
@@ -87,29 +86,9 @@ function makeTile(playerModel, x, y) {
 	let hasShipPart = playerModel.board.hasShipPartAtCoordinate(coordinate);
 
 	if (hasShipPart) {
-		let shipPartObject = makeShipPart(playerModel, x, y);
-		tileMesh.add(shipPartObject);
+		let shipPart = new ShipPart(playerModel);
+		tileMesh.add(shipPart);
 	}
 
 	return tileMesh;
-}
-
-function makeShipPart(playerModel, x, y) {
-	'use strict';
-
-	let shipPartObject = new THREE.Group();
-
-	let shipPartMesh = new THREE.Mesh(geometries.shipPart, materials.shipPart.default);
-	shipPartMesh.name = 'shipPart';
-	shipPartMesh.castShadow = true;
-	shipPartMesh.visible = playerModel.type === 'human';
-	shipPartObject.add(shipPartMesh);
-
-	let light = lights.makeShipPart();
-	light.name = 'light';
-	shipPartObject.add(light);
-
-	shipPartObject.translateY((SHIP_PART_SIZE + TILE_HEIGHT) / 2);
-
-	return shipPartObject;
 }

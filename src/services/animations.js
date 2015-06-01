@@ -1,13 +1,11 @@
 import THREE from 'three';
 import TWEEN from 'tween.js';
-import { SHIP_PART_SIZE } from '../services/geometries';
 
 
 export default {
 	update,
 	hoverBoard,
 	revealBoard,
-	discoverShipPart,
 	shakeBoard
 };
 
@@ -63,32 +61,6 @@ function revealBoard (board, playerModel) {
 			tween.onComplete(() => resolve());
 		}
 	}
-}
-
-function discoverShipPart (shipPartGroup) {
-	'use strict';
-
-	shipPartGroup.position.y -= SHIP_PART_SIZE;
-
-	let relativeUp = 1+SHIP_PART_SIZE;
-	let relativeDown = 1;
-
-	let tweenUp = new TWEEN.Tween(shipPartGroup.position)
-		.to({y: String(relativeUp)}, 200 / ANIMATION_SPEED_FACTOR)
-		.easing(TWEEN.Easing.Sinusoidal.Out)
-		.delay(50 / ANIMATION_SPEED_FACTOR);
-
-	let tweenDown = new TWEEN.Tween(shipPartGroup.position)
-		.to({y: String(-relativeDown)}, 400 / ANIMATION_SPEED_FACTOR)
-		.easing(TWEEN.Easing.Bounce.Out);
-
-	tweenUp.chain(tweenDown).start();
-
-	let promise = new Promise((resolve, reject) => {
-		tweenDown.onComplete(() => resolve());
-	});
-
-	return promise;
 }
 
 function shakeBoard (board, impactCoordinate, force) {

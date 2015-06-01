@@ -10,9 +10,10 @@ import {
 } from '../constants';
 import materials from '../services/materials';
 import meshes from '../services/meshes';
-import lights, { HIT_SHIP_PART_LIGHT_COLOR, SUNK_SHIP_PART_LIGHT_COLOR, SHIP_PART_LIGHT_INTENSITY } from '../services/lights';
+import lights from '../services/lights';
 import animations from '../services/animations';
 import Missile from './objects/Missile';
+// import { log3d } from '../lib/helpers';
 
 
 /**
@@ -181,30 +182,13 @@ export default class Game3dView extends View {
 			else if (sunk) {
 				let shipPartCoordinates = player.board.getAllShipPartCoordinates(ship);
 				shipPartCoordinates.forEach((coordinate, index) => {
-
 					let shipPart = this.getShipPartAtCoordinate(coordinate, player);
-					shipPart.material = materials.shipPart.sunk;
-					shipPart.visible = true;
-
-					let light = this.getShipLightAtCoordinate(coordinate, player);
-					light.color = SUNK_SHIP_PART_LIGHT_COLOR;
-					light.intensity = SHIP_PART_LIGHT_INTENSITY;
-
+					shipPart.sink();
 				});
 			}
 			else if (hit) {
 				let shipPart = this.getShipPartAtCoordinate(coordinate, player);
-				shipPart.material = materials.shipPart.hit;
-				if (player === this.model.computerPlayer) {
-					shipPart.visible = true;
-				}
-
-				let light = this.getShipLightAtCoordinate(coordinate, player);
-				light.color = HIT_SHIP_PART_LIGHT_COLOR;
-				light.intensity = SHIP_PART_LIGHT_INTENSITY;
-
-				let shipPartGroup = shipPart.parent;
-				animations.discoverShipPart(shipPartGroup);
+				shipPart.takeHit();
 			}
 
 			let completed = animations.shakeBoard(this.board, coordinate, force);

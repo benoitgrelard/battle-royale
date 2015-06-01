@@ -1,12 +1,8 @@
 import THREE from 'three';
 
 
-export const HIT_SHIP_PART_LIGHT_COLOR = new THREE.Color('red');
-export const SUNK_SHIP_PART_LIGHT_COLOR = new THREE.Color('blue');
-export const SHIP_PART_LIGHT_INTENSITY = 3;
 export default {
-	makeScene,
-	makeShipPart
+	makeScene
 };
 
 
@@ -39,9 +35,4 @@ function makeScene() {
 		redLight,
 		blueLight
 	];
-}
-
-function makeShipPart() {
-	'use strict';
-	return new THREE.PointLight('white', 0, 2);
 }
