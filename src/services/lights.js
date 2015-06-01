@@ -6,8 +6,7 @@ export const SUNK_SHIP_PART_LIGHT_COLOR = new THREE.Color('blue');
 export const SHIP_PART_LIGHT_INTENSITY = 3;
 export default {
 	makeScene,
-	makeShipPart,
-	makeMissile
+	makeShipPart
 };
 
 
@@ -45,9 +44,4 @@ function makeScene() {
 function makeShipPart() {
 	'use strict';
 	return new THREE.PointLight('white', 0, 2);
-}
-
-function makeMissile() {
-	'use strict';
-	return new THREE.PointLight(0x00ff88, 0, 5);
 }

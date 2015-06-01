@@ -10,9 +10,7 @@ export default {
 		default: getDefaultShipPart(),
 		hit: getHitShipPart(),
 		sunk: getSunkShipPart()
-	},
-	missile: getMissile(),
-	missileLine: getMissileLine()
+	}
 };
 
 
@@ -71,26 +69,5 @@ function getSunkShipPart() {
 		specular: 'rgb(190,190,190)',
 		shininess: 40,
 		shading: THREE.FlatShading
-	});
-}
-
-function getMissile() {
-	'use strict';
-
-	return new THREE.MeshLambertMaterial({
-		color: 0x00ff88,
-		emissive: 0x008822,
-		shading: THREE.FlatShading,
-		transparent: true
-	});
-}
-
-function getMissileLine() {
-	'use strict';
-
-	return new THREE.LineBasicMaterial({
-		color: 'green',
-		transparent: true,
-		opacity: 0.5
 	});
 }

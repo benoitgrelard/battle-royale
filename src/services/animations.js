@@ -1,14 +1,12 @@
 import THREE from 'three';
 import TWEEN from 'tween.js';
-import { TILE_HEIGHT, SHIP_PART_SIZE, MISSILE_HEIGHT } from '../services/geometries';
-import { MISSILE_DROP_HEIGHT } from '../services/meshes';
+import { SHIP_PART_SIZE } from '../services/geometries';
 
 
 export default {
 	update,
 	hoverBoard,
 	revealBoard,
-	dropMissile,
 	discoverShipPart,
 	shakeBoard
 };
@@ -65,61 +63,6 @@ function revealBoard (board, playerModel) {
 			tween.onComplete(() => resolve());
 		}
 	}
-}
-
-function dropMissile (missileObject, tile) {
-	'use strict';
-
-	let missile = missileObject.getObjectByName('missile');
-	let line = missileObject.getObjectByName('line');
-	let light = missileObject.getObjectByName('light');
-
-	missileObject.position.copy(tile.parent.localToWorld(tile.position.clone()));
-	missileObject.position.y = MISSILE_DROP_HEIGHT-2;
-
-	missile.material.opacity = 0;
-	missile.visible = true;
-
-	line.visible = true;
-	line.material.linewidth = 0.1;
-	let props = { width: line.material.linewidth };
-	new TWEEN.Tween(props)
-		.to({ width: [3, 0.1] }, 700 / ANIMATION_SPEED_FACTOR)
-		.onUpdate(() => line.material.linewidth = props.width)
-		.start();
-
-	light.intensity = 0;
-
-	let tweenUp = new TWEEN.Tween(missileObject.position)
-		.to({ y: '+2' }, 350 / ANIMATION_SPEED_FACTOR)
-		.easing(TWEEN.Easing.Exponential.Out)
-		.onUpdate(() => {
-			missile.rotation.y += 0.5;
-			missile.material.opacity += 0.1;
-			light.intensity += 0.3;
-		});
-
-	let tweenDown = new TWEEN.Tween(missileObject.position)
-		.to({y: (TILE_HEIGHT + MISSILE_HEIGHT)/2}, 400 / ANIMATION_SPEED_FACTOR)
-		.easing(TWEEN.Easing.Exponential.In)
-		.onUpdate(() => {
-			missile.rotation.y += 0.1;
-			light.intensity += 0.3;
-		});
-
-	tweenUp.chain(tweenDown);
-	tweenUp.start();
-
-	let promise = new Promise((resolve, reject) => {
-		tweenDown.onComplete(() => {
-			light.intensity = 0;
-			missile.visible = false;
-			line.visible = false;
-			resolve();
-		});
-	});
-
-	return promise;
 }
 
 function discoverShipPart (shipPartGroup) {

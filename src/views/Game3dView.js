@@ -12,6 +12,7 @@ import materials from '../services/materials';
 import meshes from '../services/meshes';
 import lights, { HIT_SHIP_PART_LIGHT_COLOR, SUNK_SHIP_PART_LIGHT_COLOR, SHIP_PART_LIGHT_INTENSITY } from '../services/lights';
 import animations from '../services/animations';
+import Missile from './objects/Missile';
 
 
 /**
@@ -43,9 +44,7 @@ export default class Game3dView extends View {
 		this.board = meshes.makeBoard(this.model);
 		scene.add(this.board);
 
-		this.missile = meshes.makeMissile();
-		this.missile.getObjectByName('missile').visible = false;
-		this.missile.getObjectByName('line').visible = false;
+		this.missile = new Missile();
 		scene.add(this.missile);
 
 		this.fog = new THREE.FogExp2(0x111111, 0.02);
@@ -171,9 +170,10 @@ export default class Game3dView extends View {
 		let force = missed ? 1 : sunk ? 6 : hit ? 3 : 0;
 
 		let tile = this.getTileAtCoordinate(coordinate, player);
-		let completed = animations.dropMissile(this.missile, tile);
+		this.missile.positionOverTile(tile);
+		let missileDropped = this.missile.drop();
 
-		completed.then(() => {
+		missileDropped.then(() => {
 			if (missed) {
 				let tile = this.getTileAtCoordinate(coordinate, player);
 				tile.material = materials.tile.missed;

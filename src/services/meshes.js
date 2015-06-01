@@ -6,14 +6,12 @@ import Coordinate from '../models/Coordinate';
 
 
 export const CELL_GAP = 0.5;
-export const MISSILE_DROP_HEIGHT = 5;
 export default {
 	makeBoard,
 	makeCell,
 	makeCellSide,
 	makeTile,
-	makeShipPart,
-	makeMissile
+	makeShipPart
 };
 
 
@@ -114,25 +112,4 @@ function makeShipPart(playerModel, x, y) {
 	shipPartObject.translateY((SHIP_PART_SIZE + TILE_HEIGHT) / 2);
 
 	return shipPartObject;
-}
-
-function makeMissile() {
-	'use strict';
-
-	let missileObject = new THREE.Group();
-
-	let missileMesh = new THREE.Mesh(geometries.missile, materials.missile);
-	missileMesh.name = 'missile';
-	missileObject.add(missileMesh);
-
-	let line = new THREE.Line(geometries.missileLine, materials.missileLine);
-	line.name = 'line';
-	line.translateY(-MISSILE_DROP_HEIGHT);
-	missileObject.add(line);
-
-	let light = lights.makeMissile();
-	light.name = 'light';
-	missileObject.add(light);
-
-	return missileObject;
 }
