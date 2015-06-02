@@ -98,7 +98,7 @@ function getBodyGeometry () {
 	return new THREE.CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
 }
 
-function getBodyMaterial() {
+function getBodyMaterial () {
 	'use strict';
 
 	return new THREE.MeshLambertMaterial({
@@ -121,7 +121,7 @@ function getTrailGeometry() {
 	return lineGeometry;
 }
 
-function getTrailMaterial() {
+function getTrailMaterial () {
 	'use strict';
 
 	return new THREE.LineBasicMaterial({

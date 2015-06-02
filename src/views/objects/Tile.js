@@ -32,12 +32,12 @@ export default class Tile extends THREE.Mesh {
 }
 
 
-function getGeometry() {
+function getGeometry () {
 	'use strict';
 	return new THREE.BoxGeometry(TILE_SIZE, TILE_HEIGHT, TILE_SIZE);
 }
 
-function getMaterials() {
+function getMaterials () {
 	'use strict';
 
 	return {
