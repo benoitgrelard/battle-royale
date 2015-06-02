@@ -7,4 +7,4 @@ export const MODEL_EVENT__SHOT = 'MODEL_EVENT__SHOT';
 // constants
 export const CELL_INIT = 'CELL_INIT';
 export const CELL_MISSED = 'CELL_MISSED';
-export const ANIMATION_SPEED_FACTOR = 10;
+export const ANIMATION_SPEED_FACTOR = 1;
