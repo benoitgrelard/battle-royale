@@ -69,15 +69,14 @@ export default class Board extends THREE.Group {
 		this.rotation.y += 0.00025;
 
 		this.children.forEach((cellPivot, index) => {
-			let cell = cellPivot.getObjectByName('cell');
-			let { x, y } = cell.userData;
+			let { x, y } = cellPivot.cell.userData;
 			cellPivot.position.y = Math.sin(time/1000 + (x+y)/5) * 0.25;
 		});
 	}
 
 	reveal (playerModel) {
 		let promise = new Promise((resolve, reject) => {
-			let cells = this.children.map(cellPivot => cellPivot.getObjectByName('cell'));
+			let cells = this.children.map(cellPivot => cellPivot.cell);
 			let isHuman = playerModel.type === 'human';
 			let angle = isHuman ? Math.PI : -Math.PI;
 
@@ -106,7 +105,7 @@ export default class Board extends THREE.Group {
 
 	shake (impactCoordinate, force) {
 		let promise = new Promise((resolve, reject) => {
-			let cells = this.children.map(cellPivot => cellPivot.getObjectByName('cell'));
+			let cells = this.children.map(cellPivot => cellPivot.cell);
 			cells.forEach((cell, index) => animateCell(cell, index, impactCoordinate, force, cells, resolve));
 		});
 
