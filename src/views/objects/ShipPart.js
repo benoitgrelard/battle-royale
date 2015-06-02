@@ -1,13 +1,15 @@
 import THREE from 'three';
 import TWEEN from 'tween.js';
-import { TILE_HEIGHT } from '../../services/geometries';
-import { ANIMATION_SPEED_FACTOR } from '../../services/animations';
+import { TILE_HEIGHT } from './Tile';
+import { ANIMATION_SPEED_FACTOR } from '../../constants';
 
 
 export const SHIP_PART_SIZE = 0.75;
 export const SHIP_PART_LIGHT_INTENSITY = 3;
 export const HIT_SHIP_PART_LIGHT_COLOR = new THREE.Color('red');
 export const SUNK_SHIP_PART_LIGHT_COLOR = new THREE.Color('blue');
+export const SHIP_PART_BODY_GEOMETRY = getBodyGeometry();
+export const SHIP_PART_BODY_MATERIALS = getBodyMaterials();
 
 export default class ShipPart extends THREE.Group {
 
@@ -17,8 +19,7 @@ export default class ShipPart extends THREE.Group {
 		this.playerModel = playerModel;
 		this.name = 'shipPart';
 
-		this.bodyMaterials = ShipPart.getBodyMaterials();
-		this.body = new THREE.Mesh(ShipPart.getBodyGeometry(), this.bodyMaterials.default);
+		this.body = new THREE.Mesh(SHIP_PART_BODY_GEOMETRY, SHIP_PART_BODY_MATERIALS.default);
 		this.body.name = 'body';
 		this.body.castShadow = true;
 		this.body.visible = playerModel.type === 'human';
@@ -36,7 +37,7 @@ export default class ShipPart extends THREE.Group {
 			this.body.visible = true;
 		}
 
-		this.body.material = this.bodyMaterials.hit;
+		this.body.material = SHIP_PART_BODY_MATERIALS.hit;
 
 		this.light.color = HIT_SHIP_PART_LIGHT_COLOR;
 		this.light.intensity = SHIP_PART_LIGHT_INTENSITY;
@@ -70,43 +71,47 @@ export default class ShipPart extends THREE.Group {
 	}
 
 	sink () {
-		this.body.material = this.bodyMaterials.sunk;
+		this.body.material = SHIP_PART_BODY_MATERIALS.sunk;
 		this.body.visible = true;
 
 		this.light.color = SUNK_SHIP_PART_LIGHT_COLOR;
 		this.light.intensity = SHIP_PART_LIGHT_INTENSITY;
 	}
 
-	static getBodyGeometry () {
-		return new THREE.IcosahedronGeometry(SHIP_PART_SIZE/2, 1);
-	}
+}
 
-	static getBodyMaterials () {
-		return {
-			default: new THREE.MeshPhongMaterial({
-				color: 'white',
-				emissive: 'rgb(5, 1, 4)',
-				specular: 'rgb(190,190,190)',
-				shininess: 40,
-				shading: THREE.FlatShading
-			}),
 
-			hit: new THREE.MeshPhongMaterial({
-				color: 'red',
-				emissive: 'rgb(40, 8, 30)',
-				specular: 'rgb(190,190,190)',
-				shininess: 40,
-				shading: THREE.FlatShading,
-			}),
+function getBodyGeometry () {
+	'use strict';
+	return new THREE.IcosahedronGeometry(SHIP_PART_SIZE/2, 1);
+}
 
-			sunk: new THREE.MeshPhongMaterial({
-				color: 0x111111,
-				emissive: 'rgb(5, 1, 4)',
-				specular: 'rgb(190,190,190)',
-				shininess: 40,
-				shading: THREE.FlatShading
-			})
-		};
-	}
+function getBodyMaterials () {
+	'use strict';
 
+	return {
+		default: new THREE.MeshPhongMaterial({
+			color: 'white',
+			emissive: 'rgb(5, 1, 4)',
+			specular: 'rgb(190,190,190)',
+			shininess: 40,
+			shading: THREE.FlatShading
+		}),
+
+		hit: new THREE.MeshPhongMaterial({
+			color: 'red',
+			emissive: 'rgb(40, 8, 30)',
+			specular: 'rgb(190,190,190)',
+			shininess: 40,
+			shading: THREE.FlatShading,
+		}),
+
+		sunk: new THREE.MeshPhongMaterial({
+			color: 0x111111,
+			emissive: 'rgb(5, 1, 4)',
+			specular: 'rgb(190,190,190)',
+			shininess: 40,
+			shading: THREE.FlatShading
+		})
+	};
 }

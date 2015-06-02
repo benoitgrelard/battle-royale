@@ -1,5 +1,6 @@
-import View from '../lib/View';
 import THREE from 'three';
+import TWEEN from 'tween.js';
+import View from '../lib/View';
 import createOrbitControls from 'three-orbit-controls';
 import Coordinate from '../models/Coordinate';
 import {
@@ -8,10 +9,7 @@ import {
 	VIEW_EVENT__SHOT_COMPLETED,
 	VIEW_EVENT__BOARD_READY
 } from '../constants';
-import materials from '../services/materials';
-import meshes from '../services/meshes';
-import lights from '../services/lights';
-import animations from '../services/animations';
+import Board from './objects/Board';
 import Missile from './objects/Missile';
 // import { log3d } from '../lib/helpers';
 
@@ -34,15 +32,16 @@ export default class Game3dView extends View {
 		// kick-off rendering
 		this.rootElement.appendChild(this.renderer.domElement);
 		this.render();
+		this.animate();
 	}
 
 	getScene () {
 		let scene = new THREE.Scene();
 
-		this.scenelights = lights.makeScene();
+		this.scenelights = this.getSceneLights();
 		scene.add(...this.scenelights);
 
-		this.board = meshes.makeBoard(this.model);
+		this.board = new Board(this.model);
 		scene.add(this.board);
 
 		this.missile = new Missile();
@@ -59,6 +58,35 @@ export default class Game3dView extends View {
 		});*/
 
 		return scene;
+	}
+
+	getSceneLights () {
+		let ambientLight = new THREE.AmbientLight(0x222222);
+
+		let topLight = new THREE.SpotLight(0xffffff, 0.65, 50, Math.PI/6, 1);
+		topLight.position.set(5, 30, 5);
+		topLight.castShadow = true;
+		topLight.shadowDarkness = 0.85;
+		topLight.shadowCameraNear = 10;
+		topLight.shadowCameraFar = 40;
+		topLight.shadowCameraFov = 45;
+		topLight.shadowMapWidth = 2048;
+		topLight.shadowMapHeight = 2048;
+		topLight.shadowBias = 0.001;
+		// topLight.shadowCameraVisible = true;
+
+		let redLight = new THREE.SpotLight(0xff0000, 0.65, 50, Math.PI/8);
+		redLight.position.set(-30, 5, 15);
+
+		let blueLight = new THREE.SpotLight(0x0000ff, 0.65, 50, Math.PI/8);
+		blueLight.position.set(-30, 5, -15);
+
+		return [
+			ambientLight,
+			topLight,
+			redLight,
+			blueLight
+		];
 	}
 
 	getCamera () {
@@ -97,14 +125,17 @@ export default class Game3dView extends View {
 	}
 
 	render (time) {
-		this.controls.update();
-		animations.update();
-
-		animations.hoverBoard(this.board, time);
-
 		this.renderer.render(this.scene, this.camera);
+	}
 
-		window.requestAnimationFrame(this.render.bind(this));
+	animate (time) {
+		window.requestAnimationFrame(this.animate.bind(this));
+
+		TWEEN.update();
+		this.controls.update();
+		this.board.hover(time);
+
+		this.render(time);
 	}
 
 	addEventListeners () {
@@ -167,36 +198,21 @@ export default class Game3dView extends View {
 
 	onPlayerShot (eventName, data, player) {
 		let { coordinate, hit, sunk, ship } = data;
-		let missed = !hit;
-		let force = missed ? 1 : sunk ? 6 : hit ? 3 : 0;
+		let tile = this.board.getTile(coordinate, player);
 
-		let tile = this.getTileAtCoordinate(coordinate, player);
 		this.missile.positionOverTile(tile);
 		let missileDropped = this.missile.drop();
 
 		missileDropped.then(() => {
-			if (missed) {
-				let tile = this.getTileAtCoordinate(coordinate, player);
-				tile.material = materials.tile.missed;
-			}
-			else if (sunk) {
-				let shipPartCoordinates = player.board.getAllShipPartCoordinates(ship);
-				shipPartCoordinates.forEach((coordinate, index) => {
-					let shipPart = this.getShipPartAtCoordinate(coordinate, player);
-					shipPart.sink();
-				});
-			}
-			else if (hit) {
-				let shipPart = this.getShipPartAtCoordinate(coordinate, player);
-				shipPart.takeHit();
-			}
 
-			let completed = animations.shakeBoard(this.board, coordinate, force);
-			completed.then(() => {
+			let boardHit = this.board.takeHit(coordinate, player, hit, sunk, ship);
+
+			boardHit.then(() => {
 				this.emit(VIEW_EVENT__SHOT_COMPLETED, {
 					player
 				});
 			});
+
 		});
 	}
 
@@ -211,7 +227,7 @@ export default class Game3dView extends View {
 	}
 
 	onPlayerActivated (player) {
-		let completed = animations.revealBoard(this.board, player);
+		let completed = this.board.reveal(player);
 
 		completed.then(() => {
 			player.canPlay = true;
@@ -219,29 +235,6 @@ export default class Game3dView extends View {
 				player
 			});
 		});
-	}
-
-	getCellAtCoordinate (coordinate) {
-		return this.board.children.filter(cellPivot => {
-			let cell = cellPivot.getObjectByName('cell');
-			return cell.userData.x === coordinate.x && cell.userData.y === coordinate.y;
-		})[0];
-	}
-
-	getCellSideAtCoordinate (coordinate, player) {
-		return this.getCellAtCoordinate(coordinate).getObjectByName(`cellSide--${player.type}`);
-	}
-
-	getTileAtCoordinate (coordinate, player) {
-		return this.getCellSideAtCoordinate(coordinate, player).getObjectByName('tile');
-	}
-
-	getShipPartAtCoordinate (coordinate, player) {
-		return this.getTileAtCoordinate(coordinate, player).getObjectByName('shipPart');
-	}
-
-	getShipLightAtCoordinate (coordinate, player) {
-		return this.getTileAtCoordinate(coordinate, player).getObjectByName('light');
 	}
 
 }

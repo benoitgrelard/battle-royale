@@ -1,13 +1,17 @@
 import THREE from 'three';
 import TWEEN from 'tween.js';
-import { ANIMATION_SPEED_FACTOR } from '../../services/animations';
-import { TILE_HEIGHT } from '../../services/geometries';
+import { ANIMATION_SPEED_FACTOR } from '../../constants';
+import { TILE_HEIGHT } from './Tile';
 
 
 export const MISSILE_SIZE = 0.3;
 export const MISSILE_HEIGHT = 0.75;
 export const MISSILE_PRE_DROP_HEIGHT = 3;
 export const MISSILE_DROP_HEIGHT = 5;
+export const MISSILE_BODY_GEOMETRY = getBodyGeometry();
+export const MISSILE_BODY_MATERIAL = getBodyMaterial();
+export const MISSILE_TRAIL_GEOMETRY = getTrailGeometry();
+export const MISSILE_TRAIL_MATERIAL = getTrailMaterial();
 
 export default class Missile extends THREE.Group {
 
@@ -16,11 +20,11 @@ export default class Missile extends THREE.Group {
 
 		this.name = 'missile';
 
-		this.body = new THREE.Mesh(Missile.getBodyGeometry(), Missile.getBodyMaterial());
+		this.body = new THREE.Mesh(MISSILE_BODY_GEOMETRY, MISSILE_BODY_MATERIAL);
 		this.body.name = 'body';
 		this.add(this.body);
 
-		this.trail = new THREE.Line(Missile.getTrailGeometry(), Missile.getTrailMaterial());
+		this.trail = new THREE.Line(MISSILE_TRAIL_GEOMETRY, MISSILE_TRAIL_MATERIAL);
 		this.trail.name = 'trail';
 		this.trail.translateY(-MISSILE_DROP_HEIGHT);
 		this.add(this.trail);
@@ -86,35 +90,43 @@ export default class Missile extends THREE.Group {
 		return promise;
 	}
 
-	static getBodyGeometry () {
-		return new THREE.CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
-	}
+}
 
-	static getBodyMaterial() {
-		return new THREE.MeshLambertMaterial({
-			color: 0x00ff88,
-			emissive: 0x008822,
-			shading: THREE.FlatShading,
-			transparent: true
-		});
-	}
 
-	static getTrailGeometry() {
-		let lineGeometry = new THREE.Geometry();
-		lineGeometry.vertices.push(
-			new THREE.Vector3(0, 100, 0),
-			new THREE.Vector3(0, -100, 0)
-		);
+function getBodyGeometry () {
+	'use strict';
+	return new THREE.CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
+}
 
-		return lineGeometry;
-	}
+function getBodyMaterial() {
+	'use strict';
 
-	static getTrailMaterial() {
-		return new THREE.LineBasicMaterial({
-			color: 'green',
-			transparent: true,
-			opacity: 0.5
-		});
-	}
+	return new THREE.MeshLambertMaterial({
+		color: 0x00ff88,
+		emissive: 0x008822,
+		shading: THREE.FlatShading,
+		transparent: true
+	});
+}
 
+function getTrailGeometry() {
+	'use strict';
+
+	let lineGeometry = new THREE.Geometry();
+	lineGeometry.vertices.push(
+		new THREE.Vector3(0, 100, 0),
+		new THREE.Vector3(0, -100, 0)
+	);
+
+	return lineGeometry;
+}
+
+function getTrailMaterial() {
+	'use strict';
+
+	return new THREE.LineBasicMaterial({
+		color: 'green',
+		transparent: true,
+		opacity: 0.5
+	});
 }
