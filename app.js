@@ -33,7 +33,7 @@ window.game3dView = game3dView;
 // window.gameController1 = gameController1;
 window.gameController2 = gameController2;
 
-},{"./controllers/GameController":94,"./lib/helpers":99,"./models/Game":102,"./views/Game3dView":111,"babelify/polyfill":89}],2:[function(require,module,exports){
+},{"./controllers/GameController":94,"./lib/helpers":99,"./models/Game":102,"./views/Game3dView":106,"babelify/polyfill":89}],2:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -40049,6 +40049,8 @@ var CELL_INIT = 'CELL_INIT';
 exports.CELL_INIT = CELL_INIT;
 var CELL_MISSED = 'CELL_MISSED';
 exports.CELL_MISSED = CELL_MISSED;
+var ANIMATION_SPEED_FACTOR = 1;
+exports.ANIMATION_SPEED_FACTOR = ANIMATION_SPEED_FACTOR;
 
 },{}],94:[function(require,module,exports){
 'use strict';
@@ -41167,595 +41169,6 @@ Object.defineProperty(exports, '__esModule', {
 	value: true
 });
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _three = require('three');
-
-var _three2 = _interopRequireDefault(_three);
-
-var _tweenJs = require('tween.js');
-
-var _tweenJs2 = _interopRequireDefault(_tweenJs);
-
-var _servicesGeometries = require('../services/geometries');
-
-var _servicesMeshes = require('../services/meshes');
-
-exports['default'] = {
-	update: update,
-	hoverBoard: hoverBoard,
-	revealBoard: revealBoard,
-	dropMissile: dropMissile,
-	discoverShipPart: discoverShipPart,
-	shakeBoard: shakeBoard
-};
-
-function update() {
-	'use strict';
-	_tweenJs2['default'].update();
-}
-
-function hoverBoard(board, time) {
-	'use strict';
-
-	board.rotation.y += 0.00025;
-
-	board.children.forEach(function (cellPivot, index) {
-		var cell = cellPivot.getObjectByName('cell');
-		var _cell$userData = cell.userData;
-		var x = _cell$userData.x;
-		var y = _cell$userData.y;
-
-		cellPivot.position.y = Math.sin(time / 1000 + (x + y) / 5) * 0.25;
-		// cellPivot.rotation.x = Math.sin(time/1000 + (x+y)/5) * -0.05;
-		// cellPivot.rotation.z = Math.sin(time/1000 + (x+y)/5) * -0.05;
-	});
-}
-
-function revealBoard(board, playerModel) {
-	'use strict';
-
-	var promise = new Promise(function (resolve, reject) {
-		var cells = board.children.map(function (cellPivot) {
-			return cellPivot.getObjectByName('cell');
-		});
-		var isHuman = playerModel.type === 'human';
-		var angle = isHuman ? Math.PI : -Math.PI;
-
-		cells.forEach(function (cell, index) {
-			return animateCell(cells, cell, index, isHuman, angle, resolve);
-		});
-	});
-
-	return promise;
-
-	function animateCell(cells, cell, index, isHuman, angle, resolve) {
-		var _cell$userData2 = cell.userData;
-		var x = _cell$userData2.x;
-		var y = _cell$userData2.y;
-
-		var size = Math.sqrt(cells.length);
-		var circularDistance = Math.sqrt(Math.pow(isHuman ? x : size - x, 2) + Math.pow(isHuman ? y : size - y, 2));
-
-		var tween = new _tweenJs2['default'].Tween(cell.rotation).to({ x: String(angle) }, 2000).delay(20 * circularDistance).easing(_tweenJs2['default'].Easing.Elastic.Out).start();
-
-		if (index === (isHuman ? cells.length - 1 : 0)) {
-			tween.onComplete(function () {
-				return resolve();
-			});
-		}
-	}
-}
-
-function dropMissile(missileObject, tile) {
-	'use strict';
-
-	var missile = missileObject.getObjectByName('missile');
-	var line = missileObject.getObjectByName('line');
-	var light = missileObject.getObjectByName('light');
-
-	missileObject.position.copy(tile.parent.localToWorld(tile.position.clone()));
-	missileObject.position.y = _servicesMeshes.MISSILE_DROP_HEIGHT - 2;
-
-	missile.material.opacity = 0;
-	missile.visible = true;
-
-	line.visible = true;
-	line.material.linewidth = 0.1;
-	var props = { width: line.material.linewidth };
-	new _tweenJs2['default'].Tween(props).to({ width: [3, 0.1] }, 700).onUpdate(function () {
-		return line.material.linewidth = props.width;
-	}).start();
-
-	light.intensity = 0;
-
-	var tweenUp = new _tweenJs2['default'].Tween(missileObject.position).to({ y: '+2' }, 350).easing(_tweenJs2['default'].Easing.Exponential.Out).onUpdate(function () {
-		missile.rotation.y += 0.5;
-		missile.material.opacity += 0.1;
-		light.intensity += 0.3;
-	});
-
-	var tweenDown = new _tweenJs2['default'].Tween(missileObject.position).to({ y: (_servicesGeometries.TILE_HEIGHT + _servicesGeometries.MISSILE_HEIGHT) / 2 }, 400).easing(_tweenJs2['default'].Easing.Exponential.In).onUpdate(function () {
-		missile.rotation.y += 0.1;
-		light.intensity += 0.3;
-	});
-
-	tweenUp.chain(tweenDown);
-	tweenUp.start();
-
-	var promise = new Promise(function (resolve, reject) {
-		tweenDown.onComplete(function () {
-			light.intensity = 0;
-			missile.visible = false;
-			line.visible = false;
-			resolve();
-		});
-	});
-
-	return promise;
-}
-
-function discoverShipPart(shipPartGroup) {
-	'use strict';
-
-	shipPartGroup.position.y -= _servicesGeometries.SHIP_PART_SIZE;
-
-	var relativeUp = 1 + _servicesGeometries.SHIP_PART_SIZE;
-	var relativeDown = 1;
-
-	var tweenUp = new _tweenJs2['default'].Tween(shipPartGroup.position).to({ y: String(relativeUp) }, 200).easing(_tweenJs2['default'].Easing.Sinusoidal.Out).delay(50);
-
-	var tweenDown = new _tweenJs2['default'].Tween(shipPartGroup.position).to({ y: String(-relativeDown) }, 400).easing(_tweenJs2['default'].Easing.Bounce.Out);
-
-	tweenUp.chain(tweenDown).start();
-
-	var promise = new Promise(function (resolve, reject) {
-		tweenDown.onComplete(function () {
-			return resolve();
-		});
-	});
-
-	return promise;
-}
-
-function shakeBoard(board, impactCoordinate, force) {
-	'use strict';
-
-	var promise = new Promise(function (resolve, reject) {
-		var cells = board.children.map(function (cellPivot) {
-			return cellPivot.getObjectByName('cell');
-		});
-		cells.forEach(function (cell, index) {
-			return animateCell(cell, index, impactCoordinate, force, cells, resolve);
-		});
-	});
-
-	return promise;
-
-	function animateCell(cell, index, impactCoordinate, force, cells, resolve) {
-		var xP = impactCoordinate.x;
-		var yP = impactCoordinate.y;
-		var _cell$userData3 = cell.userData;
-		var x = _cell$userData3.x;
-		var y = _cell$userData3.y;
-
-		var circularDistanceFromImpact = Math.sqrt(Math.pow(xP - x, 2) + Math.pow(yP - y, 2));
-
-		var _cell$rotation = cell.rotation;
-		var rotX = _cell$rotation.x;
-		var rotZ = _cell$rotation.z;
-
-		var props = { posY: 0, rotX: rotX, rotZ: rotZ };
-
-		var tween = new _tweenJs2['default'].Tween(props).to({
-			posY: [cell.position.y, (10 - circularDistanceFromImpact) * -0.1 * force, cell.position.y],
-			rotX: [rotX, rotX + _three2['default'].Math.degToRad((yP - y) * 2 * force), rotX],
-			rotZ: [rotZ, rotZ + _three2['default'].Math.degToRad((xP - x) * 2 * force), rotZ]
-		}, 2000).delay(circularDistanceFromImpact * 20).easing(_tweenJs2['default'].Easing.Elastic.Out).onUpdate(function () {
-			cell.position.y = props.posY;
-			cell.rotation.x = props.rotX;
-			cell.rotation.z = props.rotZ;
-		}).start();
-
-		if (index === cells.length - 1) {
-			tween.onComplete(function () {
-				return resolve();
-			});
-		}
-	}
-}
-module.exports = exports['default'];
-
-},{"../services/geometries":107,"../services/meshes":110,"three":91,"tween.js":92}],107:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-	value: true
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _three = require('three');
-
-var _three2 = _interopRequireDefault(_three);
-
-var TILE_SIZE = 1;
-exports.TILE_SIZE = TILE_SIZE;
-var TILE_HEIGHT = 0.5;
-exports.TILE_HEIGHT = TILE_HEIGHT;
-var SHIP_PART_SIZE = 0.75;
-exports.SHIP_PART_SIZE = SHIP_PART_SIZE;
-var MISSILE_SIZE = 0.3;
-exports.MISSILE_SIZE = MISSILE_SIZE;
-var MISSILE_HEIGHT = 0.75;
-exports.MISSILE_HEIGHT = MISSILE_HEIGHT;
-exports['default'] = {
-	tile: getTile(),
-	shipPart: getShipPart(),
-	missile: getMissile(),
-	missileLine: getMissileLine()
-};
-
-function getTile() {
-	'use strict';
-	return new _three2['default'].BoxGeometry(TILE_SIZE, TILE_HEIGHT, TILE_SIZE);
-}
-
-function getShipPart() {
-	'use strict';
-	return new _three2['default'].IcosahedronGeometry(SHIP_PART_SIZE / 2, 1);
-}
-
-function getMissile() {
-	'use strict';
-	return new _three2['default'].CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
-}
-
-function getMissileLine() {
-	'use strict';
-
-	var lineGeometry = new _three2['default'].Geometry();
-	lineGeometry.vertices.push(new _three2['default'].Vector3(0, 100, 0), new _three2['default'].Vector3(0, -100, 0));
-
-	return lineGeometry;
-}
-
-},{"three":91}],108:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-	value: true
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _three = require('three');
-
-var _three2 = _interopRequireDefault(_three);
-
-var HIT_SHIP_PART_LIGHT_COLOR = new _three2['default'].Color('red');
-exports.HIT_SHIP_PART_LIGHT_COLOR = HIT_SHIP_PART_LIGHT_COLOR;
-var SUNK_SHIP_PART_LIGHT_COLOR = new _three2['default'].Color('blue');
-exports.SUNK_SHIP_PART_LIGHT_COLOR = SUNK_SHIP_PART_LIGHT_COLOR;
-var SHIP_PART_LIGHT_INTENSITY = 3;
-exports.SHIP_PART_LIGHT_INTENSITY = SHIP_PART_LIGHT_INTENSITY;
-exports['default'] = {
-	makeScene: makeScene,
-	makeShipPart: makeShipPart,
-	makeMissile: makeMissile
-};
-
-function makeScene() {
-	'use strict';
-
-	var ambientLight = new _three2['default'].AmbientLight(2236962);
-
-	var topLight = new _three2['default'].SpotLight(16777215, 0.65, 50, Math.PI / 6, 1);
-	topLight.position.set(5, 30, 5);
-	topLight.castShadow = true;
-	topLight.shadowDarkness = 0.85;
-	topLight.shadowCameraNear = 10;
-	topLight.shadowCameraFar = 40;
-	topLight.shadowCameraFov = 45;
-	topLight.shadowMapWidth = 2048;
-	topLight.shadowMapHeight = 2048;
-	topLight.shadowBias = 0.001;
-	// topLight.shadowCameraVisible = true;
-
-	var redLight = new _three2['default'].SpotLight(16711680, 0.65, 50, Math.PI / 8);
-	redLight.position.set(-30, 5, 15);
-
-	var blueLight = new _three2['default'].SpotLight(255, 0.65, 50, Math.PI / 8);
-	blueLight.position.set(-30, 5, -15);
-
-	return [ambientLight, topLight, redLight, blueLight];
-}
-
-function makeShipPart() {
-	'use strict';
-	return new _three2['default'].PointLight('white', 0, 2);
-}
-
-function makeMissile() {
-	'use strict';
-	return new _three2['default'].PointLight(65416, 0, 5);
-}
-
-},{"three":91}],109:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-	value: true
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _three = require('three');
-
-var _three2 = _interopRequireDefault(_three);
-
-exports['default'] = {
-	tile: {
-		'default': getDefaultTile(),
-		missed: getMissedTile()
-	},
-	shipPart: {
-		'default': getDefaultShipPart(),
-		hit: getHitShipPart(),
-		sunk: getSunkShipPart()
-	},
-	missile: getMissile(),
-	missileLine: getMissileLine()
-};
-
-function getDefaultTile() {
-	'use strict';
-
-	return new _three2['default'].MeshLambertMaterial({
-		color: 'grey',
-		emissive: 'rgb(5, 1, 4)',
-		shading: _three2['default'].FlatShading
-	});
-}
-
-function getMissedTile() {
-	'use strict';
-
-	return new _three2['default'].MeshLambertMaterial({
-		color: 'cyan',
-		emissive: 39321,
-		shading: _three2['default'].FlatShading,
-		transparent: true,
-		opacity: 0.2
-	});
-}
-
-function getDefaultShipPart() {
-	'use strict';
-
-	return new _three2['default'].MeshPhongMaterial({
-		color: 'white',
-		emissive: 'rgb(5, 1, 4)',
-		specular: 'rgb(190,190,190)',
-		shininess: 40,
-		shading: _three2['default'].FlatShading
-	});
-}
-
-function getHitShipPart() {
-	'use strict';
-
-	return new _three2['default'].MeshPhongMaterial({
-		color: 'red',
-		emissive: 'rgb(40, 8, 30)',
-		specular: 'rgb(190,190,190)',
-		shininess: 40,
-		shading: _three2['default'].FlatShading });
-}
-
-function getSunkShipPart() {
-	'use strict';
-
-	return new _three2['default'].MeshPhongMaterial({
-		color: 1118481,
-		emissive: 'rgb(5, 1, 4)',
-		specular: 'rgb(190,190,190)',
-		shininess: 40,
-		shading: _three2['default'].FlatShading
-	});
-}
-
-function getMissile() {
-	'use strict';
-
-	return new _three2['default'].MeshLambertMaterial({
-		color: 65416,
-		emissive: 34850,
-		shading: _three2['default'].FlatShading,
-		transparent: true
-	});
-}
-
-function getMissileLine() {
-	'use strict';
-
-	return new _three2['default'].LineBasicMaterial({
-		color: 'green',
-		transparent: true,
-		opacity: 0.5
-	});
-}
-module.exports = exports['default'];
-
-},{"three":91}],110:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-	value: true
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _three = require('three');
-
-var _three2 = _interopRequireDefault(_three);
-
-var _geometries = require('./geometries');
-
-var _geometries2 = _interopRequireDefault(_geometries);
-
-var _materials = require('./materials');
-
-var _materials2 = _interopRequireDefault(_materials);
-
-var _lights = require('./lights');
-
-var _lights2 = _interopRequireDefault(_lights);
-
-var _modelsCoordinate = require('../models/Coordinate');
-
-var _modelsCoordinate2 = _interopRequireDefault(_modelsCoordinate);
-
-var CELL_GAP = 0.5;
-exports.CELL_GAP = CELL_GAP;
-var MISSILE_DROP_HEIGHT = 5;
-exports.MISSILE_DROP_HEIGHT = MISSILE_DROP_HEIGHT;
-exports['default'] = {
-	makeBoard: makeBoard,
-	makeCell: makeCell,
-	makeCellSide: makeCellSide,
-	makeTile: makeTile,
-	makeShipPart: makeShipPart,
-	makeMissile: makeMissile
-};
-
-function makeBoard(gameModel) {
-	'use strict';
-
-	var BOARD_SIZE = gameModel.boardSize * _geometries.TILE_SIZE + (gameModel.boardSize - 1) * CELL_GAP;
-
-	var boardObject = new _three2['default'].Group();
-	boardObject.name = 'board';
-
-	for (var y = 0; y < gameModel.boardSize; y++) {
-		for (var x = 0; x < gameModel.boardSize; x++) {
-
-			var cellObject = makeCell(gameModel, x, y);
-
-			var initialOffset = _geometries.TILE_SIZE / 2;
-			var incrementOffset = _geometries.TILE_SIZE + CELL_GAP;
-			var centerInBoardOffset = -BOARD_SIZE / 2;
-
-			cellObject.translateX(initialOffset + x * incrementOffset + centerInBoardOffset);
-			cellObject.translateZ(initialOffset + y * incrementOffset + centerInBoardOffset);
-
-			boardObject.add(cellObject);
-		}
-	}
-
-	return boardObject;
-}
-
-function makeCell(gameModel, x, y) {
-	'use strict';
-
-	var cellPivot = new _three2['default'].Group();
-	cellPivot.name = 'cellPivot';
-
-	var cellObject = new _three2['default'].Group();
-	cellObject.name = 'cell';
-	cellObject.userData = { x: x, y: y };
-
-	var humanCellSide = makeCellSide(gameModel.humanPlayer, x, y);
-	var computerCellSide = makeCellSide(gameModel.computerPlayer, x, y);
-	computerCellSide.rotateX(Math.PI);
-
-	cellObject.add(humanCellSide, computerCellSide);
-	cellPivot.add(cellObject);
-
-	return cellPivot;
-}
-
-function makeCellSide(playerModel, x, y) {
-	'use strict';
-
-	var cellSideObject = new _three2['default'].Group();
-	cellSideObject.name = 'cellSide--' + playerModel.type;
-
-	var tile = makeTile(playerModel, x, y);
-	tile.translateY(_geometries.TILE_HEIGHT / 2);
-
-	cellSideObject.add(tile);
-
-	return cellSideObject;
-}
-
-function makeTile(playerModel, x, y) {
-	'use strict';
-
-	var tileMesh = new _three2['default'].Mesh(_geometries2['default'].tile, _materials2['default'].tile['default']);
-	tileMesh.name = 'tile';
-	tileMesh.receiveShadow = true;
-
-	var coordinate = new _modelsCoordinate2['default']({ x: x, y: y });
-	var hasShipPart = playerModel.board.hasShipPartAtCoordinate(coordinate);
-
-	if (hasShipPart) {
-		var shipPartObject = makeShipPart(playerModel, x, y);
-		tileMesh.add(shipPartObject);
-	}
-
-	return tileMesh;
-}
-
-function makeShipPart(playerModel, x, y) {
-	'use strict';
-
-	var shipPartObject = new _three2['default'].Group();
-
-	var shipPartMesh = new _three2['default'].Mesh(_geometries2['default'].shipPart, _materials2['default'].shipPart['default']);
-	shipPartMesh.name = 'shipPart';
-	shipPartMesh.castShadow = true;
-	shipPartMesh.visible = playerModel.type === 'human';
-	shipPartObject.add(shipPartMesh);
-
-	var light = _lights2['default'].makeShipPart();
-	light.name = 'light';
-	shipPartObject.add(light);
-
-	shipPartObject.translateY((_geometries.SHIP_PART_SIZE + _geometries.TILE_HEIGHT) / 2);
-
-	return shipPartObject;
-}
-
-function makeMissile() {
-	'use strict';
-
-	var missileObject = new _three2['default'].Group();
-
-	var missileMesh = new _three2['default'].Mesh(_geometries2['default'].missile, _materials2['default'].missile);
-	missileMesh.name = 'missile';
-	missileObject.add(missileMesh);
-
-	var line = new _three2['default'].Line(_geometries2['default'].missileLine, _materials2['default'].missileLine);
-	line.name = 'line';
-	line.translateY(-MISSILE_DROP_HEIGHT);
-	missileObject.add(line);
-
-	var light = _lights2['default'].makeMissile();
-	light.name = 'light';
-	missileObject.add(light);
-
-	return missileObject;
-}
-
-},{"../models/Coordinate":101,"./geometries":107,"./lights":108,"./materials":109,"three":91}],111:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-	value: true
-});
-
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
@@ -41768,13 +41181,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
 
-var _libView = require('../lib/View');
-
-var _libView2 = _interopRequireDefault(_libView);
-
 var _three = require('three');
 
 var _three2 = _interopRequireDefault(_three);
+
+var _tweenJs = require('tween.js');
+
+var _tweenJs2 = _interopRequireDefault(_tweenJs);
+
+var _libView = require('../lib/View');
+
+var _libView2 = _interopRequireDefault(_libView);
 
 var _threeOrbitControls = require('three-orbit-controls');
 
@@ -41786,21 +41203,15 @@ var _modelsCoordinate2 = _interopRequireDefault(_modelsCoordinate);
 
 var _constants = require('../constants');
 
-var _servicesMaterials = require('../services/materials');
+var _objectsBoard = require('./objects/Board');
 
-var _servicesMaterials2 = _interopRequireDefault(_servicesMaterials);
+var _objectsBoard2 = _interopRequireDefault(_objectsBoard);
 
-var _servicesMeshes = require('../services/meshes');
+var _objectsMissile = require('./objects/Missile');
 
-var _servicesMeshes2 = _interopRequireDefault(_servicesMeshes);
+var _objectsMissile2 = _interopRequireDefault(_objectsMissile);
 
-var _servicesLights = require('../services/lights');
-
-var _servicesLights2 = _interopRequireDefault(_servicesLights);
-
-var _servicesAnimations = require('../services/animations');
-
-var _servicesAnimations2 = _interopRequireDefault(_servicesAnimations);
+// import { log3d } from '../lib/helpers';
 
 /**
  * @class  Game3dView
@@ -41822,6 +41233,7 @@ var Game3dView = (function (_View) {
 		// kick-off rendering
 		this.rootElement.appendChild(this.renderer.domElement);
 		this.render();
+		this.animate();
 	}
 
 	_inherits(Game3dView, _View);
@@ -41831,15 +41243,13 @@ var Game3dView = (function (_View) {
 		value: function getScene() {
 			var scene = new _three2['default'].Scene();
 
-			this.scenelights = _servicesLights2['default'].makeScene();
+			this.scenelights = this.getSceneLights();
 			scene.add.apply(scene, _toConsumableArray(this.scenelights));
 
-			this.board = _servicesMeshes2['default'].makeBoard(this.model);
+			this.board = new _objectsBoard2['default'](this.model);
 			scene.add(this.board);
 
-			this.missile = _servicesMeshes2['default'].makeMissile();
-			this.missile.getObjectByName('missile').visible = false;
-			this.missile.getObjectByName('line').visible = false;
+			this.missile = new _objectsMissile2['default']();
 			scene.add(this.missile);
 
 			this.fog = new _three2['default'].FogExp2(1118481, 0.02);
@@ -41853,6 +41263,31 @@ var Game3dView = (function (_View) {
    });*/
 
 			return scene;
+		}
+	}, {
+		key: 'getSceneLights',
+		value: function getSceneLights() {
+			var ambientLight = new _three2['default'].AmbientLight(2236962);
+
+			var topLight = new _three2['default'].SpotLight(16777215, 0.65, 50, Math.PI / 6, 1);
+			topLight.position.set(5, 30, 5);
+			topLight.castShadow = true;
+			topLight.shadowDarkness = 0.85;
+			topLight.shadowCameraNear = 10;
+			topLight.shadowCameraFar = 40;
+			topLight.shadowCameraFov = 45;
+			topLight.shadowMapWidth = 2048;
+			topLight.shadowMapHeight = 2048;
+			topLight.shadowBias = 0.001;
+			// topLight.shadowCameraVisible = true;
+
+			var redLight = new _three2['default'].SpotLight(16711680, 0.65, 50, Math.PI / 8);
+			redLight.position.set(-30, 5, 15);
+
+			var blueLight = new _three2['default'].SpotLight(255, 0.65, 50, Math.PI / 8);
+			blueLight.position.set(-30, 5, -15);
+
+			return [ambientLight, topLight, redLight, blueLight];
 		}
 	}, {
 		key: 'getCamera',
@@ -41895,14 +41330,18 @@ var Game3dView = (function (_View) {
 	}, {
 		key: 'render',
 		value: function render(time) {
-			this.controls.update();
-			_servicesAnimations2['default'].update();
-
-			_servicesAnimations2['default'].hoverBoard(this.board, time);
-
 			this.renderer.render(this.scene, this.camera);
+		}
+	}, {
+		key: 'animate',
+		value: function animate(time) {
+			window.requestAnimationFrame(this.animate.bind(this));
 
-			window.requestAnimationFrame(this.render.bind(this));
+			_tweenJs2['default'].update();
+			this.controls.update();
+			this.board.hover(time);
+
+			this.render(time);
 		}
 	}, {
 		key: 'addEventListeners',
@@ -41925,9 +41364,9 @@ var Game3dView = (function (_View) {
 				return;
 			}
 
-			var cellSides = this.getIntersectedComputerCellSideFromEvent(event);
+			var hoveredTile = this.getIntersectedComputerTileFromEvent(event);
 
-			this.rootElement.style.cursor = cellSides.length ? 'pointer' : 'default';
+			this.rootElement.style.cursor = hoveredTile ? 'pointer' : 'default';
 		}
 	}, {
 		key: 'handleViewClicked',
@@ -41936,15 +41375,15 @@ var Game3dView = (function (_View) {
 				return;
 			}
 
-			var cellSides = this.getIntersectedComputerCellSideFromEvent(event);
+			var clickedTile = this.getIntersectedComputerTileFromEvent(event);
 
-			if (cellSides.length === 0) {
+			if (!clickedTile) {
 				return;
 			}
 
-			var _cellSides$0$parent$userData = cellSides[0].parent.userData;
-			var x = _cellSides$0$parent$userData.x;
-			var y = _cellSides$0$parent$userData.y;
+			var _clickedTile$parent$parent$userData = clickedTile.parent.parent.userData;
+			var x = _clickedTile$parent$parent$userData.x;
+			var y = _clickedTile$parent$parent$userData.y;
 
 			this.emit(_constants.VIEW_EVENT__SHOOT_REQUESTED, {
 				coordinate: new _modelsCoordinate2['default']({ x: x, y: y })
@@ -41953,8 +41392,10 @@ var Game3dView = (function (_View) {
 			this.model.humanPlayer.canPlay = false;
 		}
 	}, {
-		key: 'getIntersectedComputerCellSideFromEvent',
-		value: function getIntersectedComputerCellSideFromEvent(event) {
+		key: 'getIntersectedComputerTileFromEvent',
+		value: function getIntersectedComputerTileFromEvent(event) {
+			var _this = this;
+
 			var mouseVector = new _three2['default'].Vector2();
 			var raycaster = new _three2['default'].Raycaster();
 
@@ -41963,66 +41404,37 @@ var Game3dView = (function (_View) {
 
 			raycaster.setFromCamera(mouseVector, this.camera);
 
-			var cells = this.board.children;
-			var intersects = raycaster.intersectObjects(cells, true);
-			var cellSides = intersects.filter(function (intersection) {
-				return intersection.object.name === 'tile' && intersection.object.parent.name === 'cellSide--computer';
-			}).map(function (cellIntersection) {
-				return cellIntersection.object.parent;
+			var computerTiles = this.board.children.map(function (cell) {
+				return cell.getCellSide(_this.model.computerPlayer).tile;
+			});
+			var intersections = raycaster.intersectObjects(computerTiles);
+			var intersectedComputerTiles = intersections.map(function (intersection) {
+				return intersection.object;
 			});
 
-			return cellSides;
+			return intersectedComputerTiles.length ? intersectedComputerTiles[0] : null;
 		}
 	}, {
 		key: 'onPlayerShot',
 		value: function onPlayerShot(eventName, data, player) {
-			var _this = this;
+			var _this2 = this;
 
 			var coordinate = data.coordinate;
 			var hit = data.hit;
 			var sunk = data.sunk;
 			var ship = data.ship;
 
-			var missed = !hit;
-			var force = missed ? 1 : sunk ? 6 : hit ? 3 : 0;
+			var tile = this.board.getCell(coordinate).getCellSide(player).tile;
 
-			var tile = this.getTileAtCoordinate(coordinate, player);
-			var completed = _servicesAnimations2['default'].dropMissile(this.missile, tile);
+			this.missile.positionOverTile(tile);
+			var missileDropped = this.missile.drop();
 
-			completed.then(function () {
-				if (missed) {
-					var _tile = _this.getTileAtCoordinate(coordinate, player);
-					_tile.material = _servicesMaterials2['default'].tile.missed;
-				} else if (sunk) {
-					var shipPartCoordinates = player.board.getAllShipPartCoordinates(ship);
-					shipPartCoordinates.forEach(function (coordinate, index) {
+			missileDropped.then(function () {
 
-						var shipPart = _this.getShipPartAtCoordinate(coordinate, player);
-						shipPart.material = _servicesMaterials2['default'].shipPart.sunk;
-						shipPart.visible = true;
+				var boardHit = _this2.board.takeHit(player, coordinate, hit, sunk, ship);
 
-						var light = _this.getShipLightAtCoordinate(coordinate, player);
-						light.color = _servicesLights.SUNK_SHIP_PART_LIGHT_COLOR;
-						light.intensity = _servicesLights.SHIP_PART_LIGHT_INTENSITY;
-					});
-				} else if (hit) {
-					var shipPart = _this.getShipPartAtCoordinate(coordinate, player);
-					shipPart.material = _servicesMaterials2['default'].shipPart.hit;
-					if (player === _this.model.computerPlayer) {
-						shipPart.visible = true;
-					}
-
-					var light = _this.getShipLightAtCoordinate(coordinate, player);
-					light.color = _servicesLights.HIT_SHIP_PART_LIGHT_COLOR;
-					light.intensity = _servicesLights.SHIP_PART_LIGHT_INTENSITY;
-
-					var shipPartGroup = shipPart.parent;
-					_servicesAnimations2['default'].discoverShipPart(shipPartGroup);
-				}
-
-				var completed = _servicesAnimations2['default'].shakeBoard(_this.board, coordinate, force);
-				completed.then(function () {
-					_this.emit(_constants.VIEW_EVENT__SHOT_COMPLETED, {
+				boardHit.then(function () {
+					_this2.emit(_constants.VIEW_EVENT__SHOT_COMPLETED, {
 						player: player
 					});
 				});
@@ -42042,44 +41454,16 @@ var Game3dView = (function (_View) {
 	}, {
 		key: 'onPlayerActivated',
 		value: function onPlayerActivated(player) {
-			var _this2 = this;
+			var _this3 = this;
 
-			var completed = _servicesAnimations2['default'].revealBoard(this.board, player);
+			var sideShown = this.board.showSide(player);
 
-			completed.then(function () {
+			sideShown.then(function () {
 				player.canPlay = true;
-				_this2.emit(_constants.VIEW_EVENT__BOARD_READY, {
+				_this3.emit(_constants.VIEW_EVENT__BOARD_READY, {
 					player: player
 				});
 			});
-		}
-	}, {
-		key: 'getCellAtCoordinate',
-		value: function getCellAtCoordinate(coordinate) {
-			return this.board.children.filter(function (cellPivot) {
-				var cell = cellPivot.getObjectByName('cell');
-				return cell.userData.x === coordinate.x && cell.userData.y === coordinate.y;
-			})[0];
-		}
-	}, {
-		key: 'getCellSideAtCoordinate',
-		value: function getCellSideAtCoordinate(coordinate, player) {
-			return this.getCellAtCoordinate(coordinate).getObjectByName('cellSide--' + player.type);
-		}
-	}, {
-		key: 'getTileAtCoordinate',
-		value: function getTileAtCoordinate(coordinate, player) {
-			return this.getCellSideAtCoordinate(coordinate, player).getObjectByName('tile');
-		}
-	}, {
-		key: 'getShipPartAtCoordinate',
-		value: function getShipPartAtCoordinate(coordinate, player) {
-			return this.getTileAtCoordinate(coordinate, player).getObjectByName('shipPart');
-		}
-	}, {
-		key: 'getShipLightAtCoordinate',
-		value: function getShipLightAtCoordinate(coordinate, player) {
-			return this.getTileAtCoordinate(coordinate, player).getObjectByName('light');
 		}
 	}]);
 
@@ -42089,4 +41473,754 @@ var Game3dView = (function (_View) {
 exports['default'] = Game3dView;
 module.exports = exports['default'];
 
-},{"../constants":93,"../lib/View":98,"../models/Coordinate":101,"../services/animations":106,"../services/lights":108,"../services/materials":109,"../services/meshes":110,"three":91,"three-orbit-controls":90}]},{},[1]);
+},{"../constants":93,"../lib/View":98,"../models/Coordinate":101,"./objects/Board":107,"./objects/Missile":110,"three":91,"three-orbit-controls":90,"tween.js":92}],107:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
+var _three = require('three');
+
+var _three2 = _interopRequireDefault(_three);
+
+var _tweenJs = require('tween.js');
+
+var _tweenJs2 = _interopRequireDefault(_tweenJs);
+
+var _modelsCoordinate = require('../../models/Coordinate');
+
+var _modelsCoordinate2 = _interopRequireDefault(_modelsCoordinate);
+
+var _Cell = require('./Cell');
+
+var _Cell2 = _interopRequireDefault(_Cell);
+
+var _Tile = require('./Tile');
+
+var _constants = require('../../constants');
+
+var CELL_GAP = 0.5;
+
+exports.CELL_GAP = CELL_GAP;
+/**
+ * @class Board
+ */
+
+var Board = (function (_THREE$Group) {
+	function Board(gameModel) {
+		_classCallCheck(this, Board);
+
+		_get(Object.getPrototypeOf(Board.prototype), 'constructor', this).call(this);
+
+		var BOARD_SIZE = gameModel.boardSize * _Tile.TILE_SIZE + (gameModel.boardSize - 1) * CELL_GAP;
+
+		this.name = 'board';
+
+		for (var y = 0; y < gameModel.boardSize; y++) {
+			for (var x = 0; x < gameModel.boardSize; x++) {
+
+				var coordinate = new _modelsCoordinate2['default']({ x: x, y: y });
+				var cellObject = new _Cell2['default'](gameModel, coordinate);
+
+				var initialOffset = _Tile.TILE_SIZE / 2;
+				var incrementOffset = _Tile.TILE_SIZE + CELL_GAP;
+				var centerInBoardOffset = -BOARD_SIZE / 2;
+
+				cellObject.translateX(initialOffset + x * incrementOffset + centerInBoardOffset);
+				cellObject.translateZ(initialOffset + y * incrementOffset + centerInBoardOffset);
+
+				this.add(cellObject);
+			}
+		}
+	}
+
+	_inherits(Board, _THREE$Group);
+
+	_createClass(Board, [{
+		key: 'takeHit',
+		value: function takeHit(playerModel, coordinate, hit, sunk, ship) {
+			var missed = !hit;
+			var force = missed ? 1 : sunk ? 6 : hit ? 3 : 0;
+			var tile = this.getCell(coordinate).getCellSide(playerModel).tile;
+
+			if (missed) {
+				tile.markAsMissed();
+			} else if (sunk) {
+				this.sinkShip(playerModel, ship);
+			} else if (hit) {
+				tile.shipPart.takeHit();
+			}
+
+			var animationCompletePromise = this.animateImpact(coordinate, force);
+
+			return animationCompletePromise;
+		}
+	}, {
+		key: 'getCell',
+		value: function getCell(coordinate) {
+			return this.children.filter(function (cellPivot) {
+				return cellPivot.cell.userData.x === coordinate.x && cellPivot.cell.userData.y === coordinate.y;
+			})[0];
+		}
+	}, {
+		key: 'sinkShip',
+		value: function sinkShip(playerModel, ship) {
+			var _this = this;
+
+			var shipPartCoordinates = playerModel.board.getAllShipPartCoordinates(ship);
+			shipPartCoordinates.forEach(function (coordinate, index) {
+				var shipPart = _this.getCell(coordinate).getCellSide(playerModel).tile.shipPart;
+				shipPart.sink();
+			});
+		}
+	}, {
+		key: 'hover',
+		value: function hover(time) {
+			this.rotation.y += 0.00025;
+
+			this.children.forEach(function (cellPivot, index) {
+				var _cellPivot$cell$userData = cellPivot.cell.userData;
+				var x = _cellPivot$cell$userData.x;
+				var y = _cellPivot$cell$userData.y;
+
+				cellPivot.position.y = Math.sin(time / 1000 + (x + y) / 5) * 0.25;
+			});
+		}
+	}, {
+		key: 'showSide',
+		value: function showSide(playerModel) {
+			var _this2 = this;
+
+			var promise = new Promise(function (resolve, reject) {
+				var cells = _this2.children.map(function (cellPivot) {
+					return cellPivot.cell;
+				});
+				var isHuman = playerModel.type === 'human';
+				var angle = isHuman ? Math.PI : -Math.PI;
+
+				cells.forEach(function (cell, index) {
+					return animateCell(cells, cell, index, isHuman, angle, resolve);
+				});
+			});
+
+			return promise;
+
+			function animateCell(cells, cell, index, isHuman, angle, resolve) {
+				var _cell$userData = cell.userData;
+				var x = _cell$userData.x;
+				var y = _cell$userData.y;
+
+				var size = Math.sqrt(cells.length);
+				var circularDistance = Math.sqrt(Math.pow(isHuman ? x : size - x, 2) + Math.pow(isHuman ? y : size - y, 2));
+
+				var tween = new _tweenJs2['default'].Tween(cell.rotation).to({ x: String(angle) }, 2000 / _constants.ANIMATION_SPEED_FACTOR).delay(circularDistance * 20 / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Elastic.Out).start();
+
+				if (index === (isHuman ? cells.length - 1 : 0)) {
+					tween.onComplete(function () {
+						return resolve();
+					});
+				}
+			}
+		}
+	}, {
+		key: 'animateImpact',
+		value: function animateImpact(impactCoordinate, force) {
+			var _this3 = this;
+
+			var promise = new Promise(function (resolve, reject) {
+				var cells = _this3.children.map(function (cellPivot) {
+					return cellPivot.cell;
+				});
+				cells.forEach(function (cell, index) {
+					return animateCell(cell, index, impactCoordinate, force, cells, resolve);
+				});
+			});
+
+			return promise;
+
+			function animateCell(cell, index, impactCoordinate, force, cells, resolve) {
+				var xP = impactCoordinate.x;
+				var yP = impactCoordinate.y;
+				var _cell$userData2 = cell.userData;
+				var x = _cell$userData2.x;
+				var y = _cell$userData2.y;
+
+				var circularDistanceFromImpact = Math.sqrt(Math.pow(xP - x, 2) + Math.pow(yP - y, 2));
+
+				var _cell$rotation = cell.rotation;
+				var rotX = _cell$rotation.x;
+				var rotZ = _cell$rotation.z;
+
+				var props = { posY: 0, rotX: rotX, rotZ: rotZ };
+
+				var tween = new _tweenJs2['default'].Tween(props).to({
+					posY: [cell.position.y, (10 - circularDistanceFromImpact) * -0.1 * force, cell.position.y],
+					rotX: [rotX, rotX + _three2['default'].Math.degToRad((yP - y) * 2 * force), rotX],
+					rotZ: [rotZ, rotZ + _three2['default'].Math.degToRad((xP - x) * 2 * force), rotZ]
+				}, 2000 / _constants.ANIMATION_SPEED_FACTOR).delay(circularDistanceFromImpact * 20 / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Elastic.Out).onUpdate(function () {
+					cell.position.y = props.posY;
+					cell.rotation.x = props.rotX;
+					cell.rotation.z = props.rotZ;
+				}).start();
+
+				if (index === cells.length - 1) {
+					tween.onComplete(function () {
+						return resolve();
+					});
+				}
+			}
+		}
+	}]);
+
+	return Board;
+})(_three2['default'].Group);
+
+exports['default'] = Board;
+
+},{"../../constants":93,"../../models/Coordinate":101,"./Cell":108,"./Tile":112,"three":91,"tween.js":92}],108:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
+var _three = require('three');
+
+var _three2 = _interopRequireDefault(_three);
+
+var _CellSide = require('./CellSide');
+
+var _CellSide2 = _interopRequireDefault(_CellSide);
+
+/**
+ * @class Cell
+ */
+
+var Cell = (function (_THREE$Group) {
+	function Cell(gameModel, coordinate) {
+		_classCallCheck(this, Cell);
+
+		_get(Object.getPrototypeOf(Cell.prototype), 'constructor', this).call(this);
+
+		this.name = 'cellPivot';
+
+		this.cell = new _three2['default'].Group();
+		this.cell.name = 'cell';
+		var x = coordinate.x;
+		var y = coordinate.y;
+
+		this.cell.userData = { x: x, y: y };
+
+		this.humanCellSide = new _CellSide2['default'](gameModel.humanPlayer, coordinate);
+		this.computerCellSide = new _CellSide2['default'](gameModel.computerPlayer, coordinate);
+		this.computerCellSide.rotateX(Math.PI);
+
+		this.cell.add(this.humanCellSide, this.computerCellSide);
+		this.add(this.cell);
+	}
+
+	_inherits(Cell, _THREE$Group);
+
+	_createClass(Cell, [{
+		key: 'getCellSide',
+		value: function getCellSide(player) {
+			return player.type === 'human' ? this.humanCellSide : this.computerCellSide;
+		}
+	}]);
+
+	return Cell;
+})(_three2['default'].Group);
+
+exports['default'] = Cell;
+module.exports = exports['default'];
+
+},{"./CellSide":109,"three":91}],109:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
+var _three = require('three');
+
+var _three2 = _interopRequireDefault(_three);
+
+var _Tile = require('./Tile');
+
+var _Tile2 = _interopRequireDefault(_Tile);
+
+/**
+ * @class CellSide
+ */
+
+var CellSide = (function (_THREE$Group) {
+	function CellSide(playerModel, coordinate) {
+		_classCallCheck(this, CellSide);
+
+		_get(Object.getPrototypeOf(CellSide.prototype), 'constructor', this).call(this);
+
+		this.name = 'cellSide--' + playerModel.type;
+		this.tile = new _Tile2['default'](playerModel, coordinate);
+		this.add(this.tile);
+	}
+
+	_inherits(CellSide, _THREE$Group);
+
+	return CellSide;
+})(_three2['default'].Group);
+
+exports['default'] = CellSide;
+module.exports = exports['default'];
+
+},{"./Tile":112,"three":91}],110:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
+var _three = require('three');
+
+var _three2 = _interopRequireDefault(_three);
+
+var _tweenJs = require('tween.js');
+
+var _tweenJs2 = _interopRequireDefault(_tweenJs);
+
+var _constants = require('../../constants');
+
+var _Tile = require('./Tile');
+
+var MISSILE_SIZE = 0.3;
+exports.MISSILE_SIZE = MISSILE_SIZE;
+var MISSILE_HEIGHT = 0.75;
+exports.MISSILE_HEIGHT = MISSILE_HEIGHT;
+var MISSILE_PRE_DROP_HEIGHT = 3;
+exports.MISSILE_PRE_DROP_HEIGHT = MISSILE_PRE_DROP_HEIGHT;
+var MISSILE_DROP_HEIGHT = 5;
+exports.MISSILE_DROP_HEIGHT = MISSILE_DROP_HEIGHT;
+var MISSILE_BODY_GEOMETRY = getBodyGeometry();
+exports.MISSILE_BODY_GEOMETRY = MISSILE_BODY_GEOMETRY;
+var MISSILE_BODY_MATERIAL = getBodyMaterial();
+exports.MISSILE_BODY_MATERIAL = MISSILE_BODY_MATERIAL;
+var MISSILE_TRAIL_GEOMETRY = getTrailGeometry();
+exports.MISSILE_TRAIL_GEOMETRY = MISSILE_TRAIL_GEOMETRY;
+var MISSILE_TRAIL_MATERIAL = getTrailMaterial();
+
+exports.MISSILE_TRAIL_MATERIAL = MISSILE_TRAIL_MATERIAL;
+/**
+ * @class Missile
+ */
+
+var Missile = (function (_THREE$Group) {
+	function Missile() {
+		_classCallCheck(this, Missile);
+
+		_get(Object.getPrototypeOf(Missile.prototype), 'constructor', this).call(this);
+
+		this.name = 'missile';
+
+		this.body = new _three2['default'].Mesh(MISSILE_BODY_GEOMETRY, MISSILE_BODY_MATERIAL);
+		this.body.name = 'body';
+		this.add(this.body);
+
+		this.trail = new _three2['default'].Line(MISSILE_TRAIL_GEOMETRY, MISSILE_TRAIL_MATERIAL);
+		this.trail.name = 'trail';
+		this.trail.translateY(-MISSILE_DROP_HEIGHT);
+		this.add(this.trail);
+
+		this.light = new _three2['default'].PointLight(65416, 3, 5);
+		this.light.name = 'light';
+		this.add(this.light);
+
+		this.hide();
+	}
+
+	_inherits(Missile, _THREE$Group);
+
+	_createClass(Missile, [{
+		key: 'hide',
+		value: function hide() {
+			this.body.visible = false;
+			this.trail.visible = false;
+			this.light.intensity = 0;
+		}
+	}, {
+		key: 'positionOverTile',
+		value: function positionOverTile(tile) {
+			this.position.copy(tile.parent.localToWorld(tile.position.clone()));
+			this.position.y = MISSILE_PRE_DROP_HEIGHT;
+		}
+	}, {
+		key: 'drop',
+		value: function drop() {
+			var _this = this;
+
+			this.body.material.opacity = 0;
+			this.body.visible = true;
+
+			this.trail.visible = true;
+			this.trail.material.linewidth = 0.1;
+
+			this.light.intensity = 0;
+
+			new _tweenJs2['default'].Tween(this.trail.material).to({ linewidth: [5, 0.1] }, 700 / _constants.ANIMATION_SPEED_FACTOR).start();
+
+			var tweenUp = new _tweenJs2['default'].Tween(this.position).to({ y: '+2' }, 350 / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Exponential.Out).onUpdate(function () {
+				_this.body.rotation.y += 0.5;
+				_this.body.material.opacity += 0.1;
+				_this.light.intensity += 0.3;
+			});
+
+			var tweenDown = new _tweenJs2['default'].Tween(this.position).to({ y: (_Tile.TILE_HEIGHT + MISSILE_HEIGHT) / 2 }, 400 / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Exponential.In).onUpdate(function () {
+				_this.body.rotation.y += 0.1;
+				_this.light.intensity += 0.3;
+			});
+
+			tweenUp.chain(tweenDown);
+			tweenUp.start();
+
+			var promise = new Promise(function (resolve, reject) {
+				tweenDown.onComplete(function () {
+					_this.hide();
+					resolve();
+				});
+			});
+
+			return promise;
+		}
+	}]);
+
+	return Missile;
+})(_three2['default'].Group);
+
+exports['default'] = Missile;
+
+function getBodyGeometry() {
+	'use strict';
+	return new _three2['default'].CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
+}
+
+function getBodyMaterial() {
+	'use strict';
+
+	return new _three2['default'].MeshLambertMaterial({
+		color: 65416,
+		emissive: 34850,
+		shading: _three2['default'].FlatShading,
+		transparent: true
+	});
+}
+
+function getTrailGeometry() {
+	'use strict';
+
+	var lineGeometry = new _three2['default'].Geometry();
+	lineGeometry.vertices.push(new _three2['default'].Vector3(0, 100, 0), new _three2['default'].Vector3(0, -100, 0));
+
+	return lineGeometry;
+}
+
+function getTrailMaterial() {
+	'use strict';
+
+	return new _three2['default'].LineBasicMaterial({
+		color: 'green',
+		transparent: true,
+		opacity: 0.5
+	});
+}
+
+},{"../../constants":93,"./Tile":112,"three":91,"tween.js":92}],111:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
+var _three = require('three');
+
+var _three2 = _interopRequireDefault(_three);
+
+var _tweenJs = require('tween.js');
+
+var _tweenJs2 = _interopRequireDefault(_tweenJs);
+
+var _Tile = require('./Tile');
+
+var _constants = require('../../constants');
+
+var SHIP_PART_SIZE = 0.75;
+exports.SHIP_PART_SIZE = SHIP_PART_SIZE;
+var SHIP_PART_LIGHT_INTENSITY = 3;
+exports.SHIP_PART_LIGHT_INTENSITY = SHIP_PART_LIGHT_INTENSITY;
+var HIT_SHIP_PART_LIGHT_COLOR = new _three2['default'].Color('red');
+exports.HIT_SHIP_PART_LIGHT_COLOR = HIT_SHIP_PART_LIGHT_COLOR;
+var SUNK_SHIP_PART_LIGHT_COLOR = new _three2['default'].Color('blue');
+exports.SUNK_SHIP_PART_LIGHT_COLOR = SUNK_SHIP_PART_LIGHT_COLOR;
+var SHIP_PART_BODY_GEOMETRY = getBodyGeometry();
+exports.SHIP_PART_BODY_GEOMETRY = SHIP_PART_BODY_GEOMETRY;
+var SHIP_PART_BODY_MATERIALS = getBodyMaterials();
+
+exports.SHIP_PART_BODY_MATERIALS = SHIP_PART_BODY_MATERIALS;
+/**
+ * @class ShipPart
+ */
+
+var ShipPart = (function (_THREE$Group) {
+	function ShipPart(playerModel) {
+		_classCallCheck(this, ShipPart);
+
+		_get(Object.getPrototypeOf(ShipPart.prototype), 'constructor', this).call(this);
+
+		this.playerModel = playerModel;
+		this.name = 'shipPart';
+
+		this.body = new _three2['default'].Mesh(SHIP_PART_BODY_GEOMETRY, SHIP_PART_BODY_MATERIALS['default']);
+		this.body.name = 'body';
+		this.body.castShadow = true;
+		this.body.visible = playerModel.type === 'human';
+		this.add(this.body);
+
+		this.light = new _three2['default'].PointLight('white', 0, 2);
+		this.light.name = 'light';
+		this.add(this.light);
+
+		this.translateY((SHIP_PART_SIZE + _Tile.TILE_HEIGHT) / 2);
+	}
+
+	_inherits(ShipPart, _THREE$Group);
+
+	_createClass(ShipPart, [{
+		key: 'takeHit',
+		value: function takeHit() {
+			if (this.playerModel.type === 'computer') {
+				this.body.visible = true;
+			}
+
+			this.body.material = SHIP_PART_BODY_MATERIALS.hit;
+
+			this.light.color = HIT_SHIP_PART_LIGHT_COLOR;
+			this.light.intensity = SHIP_PART_LIGHT_INTENSITY;
+
+			return this.animateHit();
+		}
+	}, {
+		key: 'animateHit',
+		value: function animateHit() {
+			this.position.y -= SHIP_PART_SIZE;
+
+			var relativeUp = 1 + SHIP_PART_SIZE;
+			var relativeDown = 1;
+
+			var tweenUp = new _tweenJs2['default'].Tween(this.position).to({ y: String(relativeUp) }, 200 / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Sinusoidal.Out).delay(50 / _constants.ANIMATION_SPEED_FACTOR);
+
+			var tweenDown = new _tweenJs2['default'].Tween(this.position).to({ y: String(-relativeDown) }, 400 / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Bounce.Out);
+
+			tweenUp.chain(tweenDown);
+			tweenUp.start();
+
+			var promise = new Promise(function (resolve, reject) {
+				tweenDown.onComplete(function () {
+					return resolve();
+				});
+			});
+
+			return promise;
+		}
+	}, {
+		key: 'sink',
+		value: function sink() {
+			this.body.material = SHIP_PART_BODY_MATERIALS.sunk;
+			this.body.visible = true;
+
+			this.light.color = SUNK_SHIP_PART_LIGHT_COLOR;
+			this.light.intensity = SHIP_PART_LIGHT_INTENSITY;
+		}
+	}]);
+
+	return ShipPart;
+})(_three2['default'].Group);
+
+exports['default'] = ShipPart;
+
+function getBodyGeometry() {
+	'use strict';
+	return new _three2['default'].IcosahedronGeometry(SHIP_PART_SIZE / 2, 1);
+}
+
+function getBodyMaterials() {
+	'use strict';
+
+	return {
+		'default': new _three2['default'].MeshPhongMaterial({
+			color: 'white',
+			emissive: 'rgb(5, 1, 4)',
+			specular: 'rgb(190,190,190)',
+			shininess: 40,
+			shading: _three2['default'].FlatShading
+		}),
+
+		hit: new _three2['default'].MeshPhongMaterial({
+			color: 'red',
+			emissive: 'rgb(40, 8, 30)',
+			specular: 'rgb(190,190,190)',
+			shininess: 40,
+			shading: _three2['default'].FlatShading }),
+
+		sunk: new _three2['default'].MeshPhongMaterial({
+			color: 1118481,
+			emissive: 'rgb(5, 1, 4)',
+			specular: 'rgb(190,190,190)',
+			shininess: 40,
+			shading: _three2['default'].FlatShading
+		})
+	};
+}
+
+},{"../../constants":93,"./Tile":112,"three":91,"tween.js":92}],112:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
+var _three = require('three');
+
+var _three2 = _interopRequireDefault(_three);
+
+var _ShipPart = require('./ShipPart');
+
+var _ShipPart2 = _interopRequireDefault(_ShipPart);
+
+var TILE_SIZE = 1;
+exports.TILE_SIZE = TILE_SIZE;
+var TILE_HEIGHT = 0.5;
+exports.TILE_HEIGHT = TILE_HEIGHT;
+var TILE_GEOMETRY = getGeometry();
+exports.TILE_GEOMETRY = TILE_GEOMETRY;
+var TILE_MATERIALS = getMaterials();
+
+exports.TILE_MATERIALS = TILE_MATERIALS;
+/**
+ * @class Tile
+ */
+
+var Tile = (function (_THREE$Mesh) {
+	function Tile(playerModel, coordinate) {
+		_classCallCheck(this, Tile);
+
+		_get(Object.getPrototypeOf(Tile.prototype), 'constructor', this).call(this, TILE_GEOMETRY, TILE_MATERIALS['default']);
+
+		this.name = 'tile';
+		this.receiveShadow = true;
+
+		var hasShipPart = playerModel.board.hasShipPartAtCoordinate(coordinate);
+
+		if (hasShipPart) {
+			this.shipPart = new _ShipPart2['default'](playerModel);
+			this.add(this.shipPart);
+		}
+
+		this.translateY(TILE_HEIGHT / 2);
+	}
+
+	_inherits(Tile, _THREE$Mesh);
+
+	_createClass(Tile, [{
+		key: 'markAsMissed',
+		value: function markAsMissed() {
+			this.material = TILE_MATERIALS.missed;
+		}
+	}]);
+
+	return Tile;
+})(_three2['default'].Mesh);
+
+exports['default'] = Tile;
+
+function getGeometry() {
+	'use strict';
+	return new _three2['default'].BoxGeometry(TILE_SIZE, TILE_HEIGHT, TILE_SIZE);
+}
+
+function getMaterials() {
+	'use strict';
+
+	return {
+		'default': new _three2['default'].MeshLambertMaterial({
+			color: 'grey',
+			emissive: 'rgb(5, 1, 4)',
+			shading: _three2['default'].FlatShading
+		}),
+
+		missed: new _three2['default'].MeshLambertMaterial({
+			color: 'cyan',
+			emissive: 39321,
+			shading: _three2['default'].FlatShading,
+			transparent: true,
+			opacity: 0.2
+		})
+	};
+}
+
+},{"./ShipPart":111,"three":91}]},{},[1]);
