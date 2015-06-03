@@ -21,7 +21,7 @@ export default class GameController {
 		this.verbose = false;
 
 		// delay initial turn
-		setTimeout(() => this.giveTurnTo(this.model.humanPlayer), 2000);
+		// setTimeout(() => this.giveTurnTo(this.model.humanPlayer), 2000);
 
 		// view events
 		this.view.on(VIEW_EVENT__SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));

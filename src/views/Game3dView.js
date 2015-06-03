@@ -11,6 +11,7 @@ import {
 } from '../constants';
 import Board from './objects/Board';
 import Missile from './objects/Missile';
+import { TILE_MATERIALS } from './objects/Tile';
 // import { log3d } from '../lib/helpers';
 
 
@@ -57,6 +58,17 @@ export default class Game3dView extends View {
 			if (light.type !== 'SpotLight') { return; }
 			scene.add(new THREE.SpotLightHelper(light));
 		});*/
+
+		let particleGeometry = new THREE.IcosahedronGeometry(1, 0);
+		this.particles = [];
+		for (let i=0; i<50; i++) {
+			let particle = new THREE.Mesh(particleGeometry, TILE_MATERIALS.missed);
+			this.particles.push(particle);
+			particle.velocity = new THREE.Vector3(Math.random()*2 - 1, Math.random(), Math.random()*2 - 1);
+			let size = Math.random()*0.3 + 0.2;
+			particle.scale.multiplyScalar(size);
+			scene.add(particle);
+		}
 
 		return scene;
 	}
@@ -135,6 +147,21 @@ export default class Game3dView extends View {
 		TWEEN.update();
 		this.controls.update();
 		this.board.hover(time);
+
+		this.particles.forEach(particle => {
+			particle.position.copy(
+				particle.position.clone().add(
+					particle.velocity.clone().divideScalar(2)
+				).multiplyScalar(0.98)
+			);
+
+			particle.rotation.x += particle.velocity.x/5;
+			particle.rotation.y += particle.velocity.y/5;
+			particle.rotation.z += particle.velocity.z/5;
+			particle.rotation.x *= 0.99;
+			particle.rotation.y *= 0.99;
+			particle.rotation.z *= 0.99;
+		});
 
 		this.render(time);
 	}
