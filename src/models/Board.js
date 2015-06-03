@@ -4,6 +4,7 @@ import ShipPart from './ShipPart';
 import { CELL_INIT, CELL_MISSED, MODEL_EVENT__SHOT } from '../constants';
 
 
+
 export const DEFAULT_BOARD_SIZE = 10;
 
 /**

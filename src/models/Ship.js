@@ -2,6 +2,7 @@ import Model from '../lib/Model';
 import ShipPart from './ShipPart';
 
 
+
 /**
  * @class Ship
  */

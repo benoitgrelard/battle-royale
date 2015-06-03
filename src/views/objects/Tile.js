@@ -2,11 +2,15 @@ import THREE from 'three';
 import ShipPart from './ShipPart';
 
 
+
 export const TILE_SIZE = 1;
 export const TILE_HEIGHT = 0.5;
 export const TILE_GEOMETRY = getGeometry();
 export const TILE_MATERIALS = getMaterials();
 
+/**
+ * @class Tile
+ */
 export default class Tile extends THREE.Mesh {
 
 	constructor (playerModel, coordinate) {
@@ -30,6 +34,7 @@ export default class Tile extends THREE.Mesh {
 	}
 
 }
+
 
 
 function getGeometry () {

@@ -1,6 +1,7 @@
 import EventEmitter from './EventEmitter';
 
 
+
 /**
  * @class Model
  */

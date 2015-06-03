@@ -6,6 +6,7 @@ import { getRandomBoolean } from '../lib/helpers';
 import { MODEL_EVENT__SHOT } from '../constants';
 
 
+
 /**
  * @class Player
  */

@@ -6,8 +6,12 @@ import { TILE_SIZE } from './Tile';
 import { ANIMATION_SPEED_FACTOR } from '../../constants';
 
 
+
 export const CELL_GAP = 0.5;
 
+/**
+ * @class Board
+ */
 export default class Board extends THREE.Group {
 
 	constructor (gameModel) {
@@ -35,7 +39,7 @@ export default class Board extends THREE.Group {
 		}
 	}
 
-	takeHit (coordinate, playerModel, hit, sunk, ship) {
+	takeHit (playerModel, coordinate, hit, sunk, ship) {
 		let missed = !hit;
 		let force = missed ? 1 : sunk ? 6 : hit ? 3 : 0;
 		let tile = this.getCell(coordinate).getCellSide(playerModel).tile;
@@ -44,25 +48,29 @@ export default class Board extends THREE.Group {
 			tile.markAsMissed();
 		}
 		else if (sunk) {
-			let shipPartCoordinates = playerModel.board.getAllShipPartCoordinates(ship);
-			shipPartCoordinates.forEach((coordinate, index) => {
-				let shipPart = this.getShipPart(coordinate, playerModel);
-				shipPart.sink();
-			});
+			this.sinkShip(playerModel, ship);
 		}
 		else if (hit) {
 			tile.shipPart.takeHit();
 		}
 
-		let promise = this.shake(coordinate, force);
+		let animationCompletePromise = this.animateImpact(coordinate, force);
 
-		return promise;
+		return animationCompletePromise;
 	}
 
 	getCell (coordinate) {
 		return this.children.filter(cellPivot => {
 			return cellPivot.cell.userData.x === coordinate.x && cellPivot.cell.userData.y === coordinate.y;
 		})[0];
+	}
+
+	sinkShip (playerModel, ship) {
+		let shipPartCoordinates = playerModel.board.getAllShipPartCoordinates(ship);
+		shipPartCoordinates.forEach((coordinate, index) => {
+			let shipPart = this.getCell(coordinate).getCellSide(playerModel).tile.shipPart;
+			shipPart.sink();
+		});
 	}
 
 	hover (time) {
@@ -74,7 +82,7 @@ export default class Board extends THREE.Group {
 		});
 	}
 
-	reveal (playerModel) {
+	showSide (playerModel) {
 		let promise = new Promise((resolve, reject) => {
 			let cells = this.children.map(cellPivot => cellPivot.cell);
 			let isHuman = playerModel.type === 'human';
@@ -103,7 +111,7 @@ export default class Board extends THREE.Group {
 		}
 	}
 
-	shake (impactCoordinate, force) {
+	animateImpact (impactCoordinate, force) {
 		let promise = new Promise((resolve, reject) => {
 			let cells = this.children.map(cellPivot => cellPivot.cell);
 			cells.forEach((cell, index) => animateCell(cell, index, impactCoordinate, force, cells, resolve));

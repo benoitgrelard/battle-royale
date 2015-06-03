@@ -14,6 +14,7 @@ import Missile from './objects/Missile';
 // import { log3d } from '../lib/helpers';
 
 
+
 /**
  * @class  Game3dView
  */
@@ -154,19 +155,19 @@ export default class Game3dView extends View {
 		this.rootElement.style.cursor = 'default';
 		if (!this.model.humanPlayer.canPlay) { return; }
 
-		let cellSides = this.getIntersectedComputerCellSideFromEvent(event);
+		let hoveredTile = this.getIntersectedComputerTileFromEvent(event);
 
-		this.rootElement.style.cursor = cellSides.length ? 'pointer' : 'default';
+		this.rootElement.style.cursor = hoveredTile ? 'pointer' : 'default';
 	}
 
 	handleViewClicked (event) {
 		if (!this.model.humanPlayer.canPlay) { return; }
 
-		let cellSides = this.getIntersectedComputerCellSideFromEvent(event);
+		let clickedTile = this.getIntersectedComputerTileFromEvent(event);
 
-		if (cellSides.length === 0) { return; }
+		if (!clickedTile) { return; }
 
-		let { x, y } = cellSides[0].parent.userData;
+		let { x, y } = clickedTile.parent.parent.userData;
 
 		this.emit(VIEW_EVENT__SHOOT_REQUESTED, {
 			coordinate: new Coordinate({ x, y })
@@ -175,7 +176,7 @@ export default class Game3dView extends View {
 		this.model.humanPlayer.canPlay = false;
 	}
 
-	getIntersectedComputerCellSideFromEvent (event) {
+	getIntersectedComputerTileFromEvent (event) {
 		let mouseVector = new THREE.Vector2();
 		let raycaster = new THREE.Raycaster();
 
@@ -184,28 +185,23 @@ export default class Game3dView extends View {
 
 		raycaster.setFromCamera(mouseVector, this.camera);
 
-		let cells = this.board.children;
-		let intersects = raycaster.intersectObjects(cells, true);
-		let cellSides = intersects
-			.filter(intersection => {
-				return intersection.object.name === 'tile' &&
-					   intersection.object.parent.name === 'cellSide--computer';
-			})
-			.map(cellIntersection => cellIntersection.object.parent);
+		let computerTiles = this.board.children.map(cell => cell.getCellSide(this.model.computerPlayer).tile);
+		let intersections = raycaster.intersectObjects(computerTiles);
+		let intersectedComputerTiles = intersections.map(intersection => intersection.object);
 
-		return cellSides;
+		return intersectedComputerTiles.length ? intersectedComputerTiles[0] : null;
 	}
 
 	onPlayerShot (eventName, data, player) {
 		let { coordinate, hit, sunk, ship } = data;
-		let tile = this.board.getTile(coordinate, player);
+		let tile = this.board.getCell(coordinate).getCellSide(player).tile;
 
 		this.missile.positionOverTile(tile);
 		let missileDropped = this.missile.drop();
 
 		missileDropped.then(() => {
 
-			let boardHit = this.board.takeHit(coordinate, player, hit, sunk, ship);
+			let boardHit = this.board.takeHit(player, coordinate, hit, sunk, ship);
 
 			boardHit.then(() => {
 				this.emit(VIEW_EVENT__SHOT_COMPLETED, {
@@ -227,9 +223,9 @@ export default class Game3dView extends View {
 	}
 
 	onPlayerActivated (player) {
-		let completed = this.board.reveal(player);
+		let sideShown = this.board.showSide(player);
 
-		completed.then(() => {
+		sideShown.then(() => {
 			player.canPlay = true;
 			this.emit(VIEW_EVENT__BOARD_READY, {
 				player

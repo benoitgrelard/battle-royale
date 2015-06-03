@@ -2,6 +2,7 @@ import Coordinate from '../models/Coordinate';
 import { getRandomInt } from './helpers';
 
 
+
 /**
  * @class AI
  */

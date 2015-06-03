@@ -2,6 +2,7 @@ import Model from '../lib/Model';
 import { getRandomInt } from '../lib/helpers';
 
 
+
 /**
  * @class Coordinate
  */

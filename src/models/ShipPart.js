@@ -1,6 +1,7 @@
 import Model from '../lib/Model';
 
 
+
 export const HIT = 'HIT';
 export const INTACT = 'INTACT';
 

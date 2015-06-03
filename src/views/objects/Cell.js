@@ -2,6 +2,10 @@ import THREE from 'three';
 import CellSide from './CellSide';
 
 
+
+/**
+ * @class Cell
+ */
 export default class Cell extends THREE.Group {
 
 	constructor (gameModel, coordinate) {

@@ -4,6 +4,7 @@ import { ANIMATION_SPEED_FACTOR } from '../../constants';
 import { TILE_HEIGHT } from './Tile';
 
 
+
 export const MISSILE_SIZE = 0.3;
 export const MISSILE_HEIGHT = 0.75;
 export const MISSILE_PRE_DROP_HEIGHT = 3;
@@ -13,6 +14,9 @@ export const MISSILE_BODY_MATERIAL = getBodyMaterial();
 export const MISSILE_TRAIL_GEOMETRY = getTrailGeometry();
 export const MISSILE_TRAIL_MATERIAL = getTrailMaterial();
 
+/**
+ * @class Missile
+ */
 export default class Missile extends THREE.Group {
 
 	constructor () {
@@ -91,6 +95,7 @@ export default class Missile extends THREE.Group {
 	}
 
 }
+
 
 
 function getBodyGeometry () {

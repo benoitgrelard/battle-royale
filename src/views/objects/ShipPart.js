@@ -4,6 +4,7 @@ import { TILE_HEIGHT } from './Tile';
 import { ANIMATION_SPEED_FACTOR } from '../../constants';
 
 
+
 export const SHIP_PART_SIZE = 0.75;
 export const SHIP_PART_LIGHT_INTENSITY = 3;
 export const HIT_SHIP_PART_LIGHT_COLOR = new THREE.Color('red');
@@ -11,6 +12,9 @@ export const SUNK_SHIP_PART_LIGHT_COLOR = new THREE.Color('blue');
 export const SHIP_PART_BODY_GEOMETRY = getBodyGeometry();
 export const SHIP_PART_BODY_MATERIALS = getBodyMaterials();
 
+/**
+ * @class ShipPart
+ */
 export default class ShipPart extends THREE.Group {
 
 	constructor (playerModel) {
@@ -79,6 +83,7 @@ export default class ShipPart extends THREE.Group {
 	}
 
 }
+
 
 
 function getBodyGeometry () {
