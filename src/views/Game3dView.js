@@ -185,7 +185,7 @@ export default class Game3dView extends View {
 
 		raycaster.setFromCamera(mouseVector, this.camera);
 
-		let computerTiles = this.board.children.map(cell => cell.getCellSide(this.model.computerPlayer).tile);
+		let computerTiles = this.board.children.map(cell => cell.getSide(this.model.computerPlayer).tile);
 		let intersections = raycaster.intersectObjects(computerTiles);
 		let intersectedComputerTiles = intersections.map(intersection => intersection.object);
 
@@ -194,7 +194,7 @@ export default class Game3dView extends View {
 
 	onPlayerShot (eventName, data, player) {
 		let { coordinate, hit, sunk, ship } = data;
-		let tile = this.board.getCell(coordinate).getCellSide(player).tile;
+		let tile = this.board.getCell(coordinate).getSide(player).tile;
 
 		this.missile.positionOverTile(tile);
 		let missileDropped = this.missile.drop();

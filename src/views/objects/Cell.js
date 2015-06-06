@@ -18,16 +18,16 @@ export default class Cell extends THREE.Group {
 		let { x, y } = coordinate;
 		this.cell.userData = { x, y };
 
-		this.humanCellSide = new CellSide(gameModel.humanPlayer, coordinate);
-		this.computerCellSide = new CellSide(gameModel.computerPlayer, coordinate);
-		this.computerCellSide.rotateX(Math.PI);
+		this.humanSide = new CellSide(gameModel.humanPlayer, coordinate);
+		this.computerSide = new CellSide(gameModel.computerPlayer, coordinate);
+		this.computerSide.rotateX(Math.PI);
 
-		this.cell.add(this.humanCellSide, this.computerCellSide);
+		this.cell.add(this.humanSide, this.computerSide);
 		this.add(this.cell);
 	}
 
-	getCellSide (player) {
-		return player.type === 'human' ? this.humanCellSide : this.computerCellSide;
+	getSide (player) {
+		return player.type === 'human' ? this.humanSide : this.computerSide;
 	}
 
 }

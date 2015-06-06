@@ -42,7 +42,7 @@ export default class Board extends THREE.Group {
 	takeHit (playerModel, coordinate, hit, sunk, ship) {
 		let missed = !hit;
 		let force = missed ? 1 : sunk ? 6 : hit ? 3 : 0;
-		let tile = this.getCell(coordinate).getCellSide(playerModel).tile;
+		let tile = this.getCell(coordinate).getSide(playerModel).tile;
 
 		if (missed) {
 			tile.markAsMissed();
@@ -68,7 +68,7 @@ export default class Board extends THREE.Group {
 	sinkShip (playerModel, ship) {
 		let shipPartCoordinates = playerModel.board.getAllShipPartCoordinates(ship);
 		shipPartCoordinates.forEach((coordinate, index) => {
-			let shipPart = this.getCell(coordinate).getCellSide(playerModel).tile.shipPart;
+			let shipPart = this.getCell(coordinate).getSide(playerModel).tile.shipPart;
 			shipPart.sink();
 		});
 	}
