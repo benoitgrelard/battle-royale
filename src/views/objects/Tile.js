@@ -17,7 +17,6 @@ export default class Tile extends THREE.Mesh {
 		super(TILE_GEOMETRY, TILE_MATERIALS.default);
 
 		this.name = 'tile';
-		this.receiveShadow = true;
 
 		let hasShipPart = playerModel.board.hasShipPartAtCoordinate(coordinate);
 

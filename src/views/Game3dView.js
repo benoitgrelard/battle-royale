@@ -66,15 +66,6 @@ export default class Game3dView extends View {
 
 		let topLight = new THREE.SpotLight(0xffffff, 0.65, 50, Math.PI/6, 1);
 		topLight.position.set(5, 30, 5);
-		topLight.castShadow = true;
-		topLight.shadowDarkness = 0.85;
-		topLight.shadowCameraNear = 10;
-		topLight.shadowCameraFar = 40;
-		topLight.shadowCameraFov = 45;
-		topLight.shadowMapWidth = 2048;
-		topLight.shadowMapHeight = 2048;
-		topLight.shadowBias = 0.001;
-		// topLight.shadowCameraVisible = true;
 
 		let redLight = new THREE.SpotLight(0xff0000, 0.65, 50, Math.PI/8);
 		redLight.position.set(-30, 5, 15);
@@ -110,10 +101,8 @@ export default class Game3dView extends View {
 		});
 
 		renderer.setClearColor(0x111111);
-		renderer.shadowMapEnabled = true;
-		renderer.shadowMapType = THREE.PCFShadowMap;
-
 		// renderer.setPixelRatio(window.devicePixelRatio);
+
 		renderer.setSize(window.innerWidth, window.innerHeight);
 
 		window.addEventListener('resize', () => {
