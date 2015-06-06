@@ -11,7 +11,6 @@ import {
 } from '../constants';
 import Board from './objects/Board';
 import Missile from './objects/Missile';
-// import { log3d } from '../lib/helpers';
 
 
 
