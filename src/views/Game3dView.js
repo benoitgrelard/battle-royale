@@ -103,15 +103,20 @@ export default class Game3dView extends View {
 		renderer.setClearColor(0x111111);
 		// renderer.setPixelRatio(window.devicePixelRatio);
 
-		renderer.setSize(window.innerWidth, window.innerHeight);
-
-		window.addEventListener('resize', () => {
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-			renderer.setSize(window.innerWidth, window.innerHeight);
-		});
+		initSize(renderer, camera);
 
 		return renderer;
+
+
+		function initSize(renderer, camera) {
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			window.addEventListener('resize', () => {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			});
+		}
 	}
 
 	render (time) {

@@ -12,6 +12,7 @@ export default class CellSide extends THREE.Group {
 		super();
 
 		this.name = `cellSide--${playerModel.type}`;
+
 		this.tile = new Tile(playerModel, coordinate);
 		this.add(this.tile);
 	}

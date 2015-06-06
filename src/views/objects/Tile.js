@@ -22,6 +22,7 @@ export default class Tile extends THREE.Mesh {
 
 		if (hasShipPart) {
 			this.shipPart = new ShipPart(playerModel);
+			this.shipPart.translateY(TILE_HEIGHT/2);
 			this.add(this.shipPart);
 		}
 

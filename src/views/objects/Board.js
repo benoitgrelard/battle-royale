@@ -17,9 +17,9 @@ export default class Board extends THREE.Group {
 	constructor (gameModel) {
 		super();
 
-		const BOARD_SIZE = (gameModel.boardSize * TILE_SIZE) + ((gameModel.boardSize - 1) * CELL_GAP);
-
 		this.name = 'board';
+
+		const BOARD_SIZE = (gameModel.boardSize * TILE_SIZE) + ((gameModel.boardSize - 1) * CELL_GAP);
 
 		for (let y=0; y<gameModel.boardSize; y++) {
 			for (let x=0; x<gameModel.boardSize; x++) {

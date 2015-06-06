@@ -1,6 +1,5 @@
 import THREE from 'three';
 import TWEEN from 'tween.js';
-import { TILE_HEIGHT } from './Tile';
 import { ANIMATION_SPEED_FACTOR } from '../../constants';
 
 
@@ -22,30 +21,49 @@ export default class ShipPart extends THREE.Group {
 	constructor (playerModel) {
 		super();
 
-		this.playerModel = playerModel;
 		this.name = 'shipPart';
+
+		this.playerModel = playerModel;
 
 		this.bodyWrapper = new THREE.Group();
 		this.bodyWrapper.name = 'bodyWrapper';
 		this.add(this.bodyWrapper);
 
-		this.body = new THREE.Mesh(SHIP_PART_BODY_GEOMETRY, SHIP_PART_BODY_MATERIALS.default);
-		this.body.name = 'body';
-		this.body.visible = playerModel.type === 'human';
+		this.body = this.getBody();
 		this.bodyWrapper.add(this.body);
 
-		this.light = new THREE.PointLight('white', 0, 2);
-		this.light.name = 'light';
+		this.light = this.getLight();
 		this.bodyWrapper.add(this.light);
 
-		this.shadow = new THREE.Mesh(SHIP_PART_SHADOW_GEOMETRY, SHIP_PART_SHADOW_MATERIAL);
-		this.shadow.name = 'shadow';
-		this.shadow.rotation.x = -Math.PI/2;
-		this.shadow.position.set(-0.05, -SHIP_PART_SIZE/2 + 0.001, -0.05);
-		this.shadow.visible = playerModel.type === 'human';
+		this.shadow = this.getShadow();
 		this.add(this.shadow);
 
-		this.translateY((SHIP_PART_SIZE + TILE_HEIGHT) / 2);
+		this.translateY(SHIP_PART_SIZE/2);
+	}
+
+	getBody () {
+		let body = new THREE.Mesh(SHIP_PART_BODY_GEOMETRY, SHIP_PART_BODY_MATERIALS.default);
+		body.name = 'body';
+		body.visible = this.playerModel.type === 'human';
+
+		return body;
+	}
+
+	getLight () {
+		let light = new THREE.PointLight('white', 0, 2);
+		light.name = 'light';
+
+		return light;
+	}
+
+	getShadow () {
+		let shadow = new THREE.Mesh(SHIP_PART_SHADOW_GEOMETRY, SHIP_PART_SHADOW_MATERIAL);
+		shadow.name = 'shadow';
+		shadow.rotation.x = -Math.PI/2;
+		shadow.position.set(-0.05, -SHIP_PART_SIZE/2 + 0.001, -0.05);
+		shadow.visible = this.playerModel.type === 'human';
+
+		return shadow;
 	}
 
 	takeHit () {
