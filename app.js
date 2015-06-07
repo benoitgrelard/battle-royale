@@ -41211,8 +41211,6 @@ var _objectsMissile = require('./objects/Missile');
 
 var _objectsMissile2 = _interopRequireDefault(_objectsMissile);
 
-// import { log3d } from '../lib/helpers';
-
 /**
  * @class  Game3dView
  */
@@ -41271,15 +41269,6 @@ var Game3dView = (function (_View) {
 
 			var topLight = new _three2['default'].SpotLight(16777215, 0.65, 50, Math.PI / 6, 1);
 			topLight.position.set(5, 30, 5);
-			topLight.castShadow = true;
-			topLight.shadowDarkness = 0.85;
-			topLight.shadowCameraNear = 10;
-			topLight.shadowCameraFar = 40;
-			topLight.shadowCameraFov = 45;
-			topLight.shadowMapWidth = 2048;
-			topLight.shadowMapHeight = 2048;
-			topLight.shadowBias = 0.001;
-			// topLight.shadowCameraVisible = true;
 
 			var redLight = new _three2['default'].SpotLight(16711680, 0.65, 50, Math.PI / 8);
 			redLight.position.set(-30, 5, 15);
@@ -41313,19 +41302,21 @@ var Game3dView = (function (_View) {
 			});
 
 			renderer.setClearColor(1118481);
-			renderer.shadowMapEnabled = true;
-			renderer.shadowMapType = _three2['default'].PCFShadowMap;
-
 			// renderer.setPixelRatio(window.devicePixelRatio);
-			renderer.setSize(window.innerWidth, window.innerHeight);
 
-			window.addEventListener('resize', function () {
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-				renderer.setSize(window.innerWidth, window.innerHeight);
-			});
+			initSize(renderer, camera);
 
 			return renderer;
+
+			function initSize(renderer, camera) {
+				renderer.setSize(window.innerWidth, window.innerHeight);
+
+				window.addEventListener('resize', function () {
+					camera.aspect = window.innerWidth / window.innerHeight;
+					camera.updateProjectionMatrix();
+					renderer.setSize(window.innerWidth, window.innerHeight);
+				});
+			}
 		}
 	}, {
 		key: 'render',
@@ -41405,7 +41396,7 @@ var Game3dView = (function (_View) {
 			raycaster.setFromCamera(mouseVector, this.camera);
 
 			var computerTiles = this.board.children.map(function (cell) {
-				return cell.getCellSide(_this.model.computerPlayer).tile;
+				return cell.getSide(_this.model.computerPlayer).tile;
 			});
 			var intersections = raycaster.intersectObjects(computerTiles);
 			var intersectedComputerTiles = intersections.map(function (intersection) {
@@ -41424,7 +41415,7 @@ var Game3dView = (function (_View) {
 			var sunk = data.sunk;
 			var ship = data.ship;
 
-			var tile = this.board.getCell(coordinate).getCellSide(player).tile;
+			var tile = this.board.getCell(coordinate).getSide(player).tile;
 
 			this.missile.positionOverTile(tile);
 			var missileDropped = this.missile.drop();
@@ -41523,9 +41514,9 @@ var Board = (function (_THREE$Group) {
 
 		_get(Object.getPrototypeOf(Board.prototype), 'constructor', this).call(this);
 
-		var BOARD_SIZE = gameModel.boardSize * _Tile.TILE_SIZE + (gameModel.boardSize - 1) * CELL_GAP;
-
 		this.name = 'board';
+
+		var BOARD_SIZE = gameModel.boardSize * _Tile.TILE_SIZE + (gameModel.boardSize - 1) * CELL_GAP;
 
 		for (var y = 0; y < gameModel.boardSize; y++) {
 			for (var x = 0; x < gameModel.boardSize; x++) {
@@ -41552,7 +41543,7 @@ var Board = (function (_THREE$Group) {
 		value: function takeHit(playerModel, coordinate, hit, sunk, ship) {
 			var missed = !hit;
 			var force = missed ? 1 : sunk ? 6 : hit ? 3 : 0;
-			var tile = this.getCell(coordinate).getCellSide(playerModel).tile;
+			var tile = this.getCell(coordinate).getSide(playerModel).tile;
 
 			if (missed) {
 				tile.markAsMissed();
@@ -41580,7 +41571,7 @@ var Board = (function (_THREE$Group) {
 
 			var shipPartCoordinates = playerModel.board.getAllShipPartCoordinates(ship);
 			shipPartCoordinates.forEach(function (coordinate, index) {
-				var shipPart = _this.getCell(coordinate).getCellSide(playerModel).tile.shipPart;
+				var shipPart = _this.getCell(coordinate).getSide(playerModel).tile.shipPart;
 				shipPart.sink();
 			});
 		}
@@ -41732,20 +41723,20 @@ var Cell = (function (_THREE$Group) {
 
 		this.cell.userData = { x: x, y: y };
 
-		this.humanCellSide = new _CellSide2['default'](gameModel.humanPlayer, coordinate);
-		this.computerCellSide = new _CellSide2['default'](gameModel.computerPlayer, coordinate);
-		this.computerCellSide.rotateX(Math.PI);
+		this.humanSide = new _CellSide2['default'](gameModel.humanPlayer, coordinate);
+		this.computerSide = new _CellSide2['default'](gameModel.computerPlayer, coordinate);
+		this.computerSide.rotateX(Math.PI);
 
-		this.cell.add(this.humanCellSide, this.computerCellSide);
+		this.cell.add(this.humanSide, this.computerSide);
 		this.add(this.cell);
 	}
 
 	_inherits(Cell, _THREE$Group);
 
 	_createClass(Cell, [{
-		key: 'getCellSide',
-		value: function getCellSide(player) {
-			return player.type === 'human' ? this.humanCellSide : this.computerCellSide;
+		key: 'getSide',
+		value: function getSide(player) {
+			return player.type === 'human' ? this.humanSide : this.computerSide;
 		}
 	}]);
 
@@ -41789,6 +41780,7 @@ var CellSide = (function (_THREE$Group) {
 		_get(Object.getPrototypeOf(CellSide.prototype), 'constructor', this).call(this);
 
 		this.name = 'cellSide--' + playerModel.type;
+
 		this.tile = new _Tile2['default'](playerModel, coordinate);
 		this.add(this.tile);
 	}
@@ -41995,8 +41987,6 @@ var _tweenJs = require('tween.js');
 
 var _tweenJs2 = _interopRequireDefault(_tweenJs);
 
-var _Tile = require('./Tile');
-
 var _constants = require('../../constants');
 
 var SHIP_PART_SIZE = 0.75;
@@ -42010,8 +42000,12 @@ exports.SUNK_SHIP_PART_LIGHT_COLOR = SUNK_SHIP_PART_LIGHT_COLOR;
 var SHIP_PART_BODY_GEOMETRY = getBodyGeometry();
 exports.SHIP_PART_BODY_GEOMETRY = SHIP_PART_BODY_GEOMETRY;
 var SHIP_PART_BODY_MATERIALS = getBodyMaterials();
-
 exports.SHIP_PART_BODY_MATERIALS = SHIP_PART_BODY_MATERIALS;
+var SHIP_PART_SHADOW_GEOMETRY = getShipPartShadowGeometry();
+exports.SHIP_PART_SHADOW_GEOMETRY = SHIP_PART_SHADOW_GEOMETRY;
+var SHIP_PART_SHADOW_MATERIAL = getShipPartShadowMaterial();
+
+exports.SHIP_PART_SHADOW_MATERIAL = SHIP_PART_SHADOW_MATERIAL;
 /**
  * @class ShipPart
  */
@@ -42022,52 +42016,86 @@ var ShipPart = (function (_THREE$Group) {
 
 		_get(Object.getPrototypeOf(ShipPart.prototype), 'constructor', this).call(this);
 
-		this.playerModel = playerModel;
 		this.name = 'shipPart';
 
-		this.body = new _three2['default'].Mesh(SHIP_PART_BODY_GEOMETRY, SHIP_PART_BODY_MATERIALS['default']);
-		this.body.name = 'body';
-		this.body.castShadow = true;
-		this.body.visible = playerModel.type === 'human';
-		this.add(this.body);
+		this.playerModel = playerModel;
 
-		this.light = new _three2['default'].PointLight('white', 0, 2);
-		this.light.name = 'light';
-		this.add(this.light);
+		this.bodyWrapper = new _three2['default'].Group();
+		this.bodyWrapper.name = 'bodyWrapper';
+		this.add(this.bodyWrapper);
 
-		this.translateY((SHIP_PART_SIZE + _Tile.TILE_HEIGHT) / 2);
+		this.body = this.getBody();
+		this.bodyWrapper.add(this.body);
+
+		this.light = this.getLight();
+		this.bodyWrapper.add(this.light);
+
+		this.shadow = this.getShadow();
+		this.add(this.shadow);
+
+		this.translateY(SHIP_PART_SIZE / 2);
 	}
 
 	_inherits(ShipPart, _THREE$Group);
 
 	_createClass(ShipPart, [{
-		key: 'takeHit',
-		value: function takeHit() {
-			if (this.playerModel.type === 'computer') {
-				this.body.visible = true;
-			}
+		key: 'getBody',
+		value: function getBody() {
+			var body = new _three2['default'].Mesh(SHIP_PART_BODY_GEOMETRY, SHIP_PART_BODY_MATERIALS['default']);
+			body.name = 'body';
+			body.visible = this.playerModel.type === 'human';
 
-			this.body.material = SHIP_PART_BODY_MATERIALS.hit;
-
-			this.light.color = HIT_SHIP_PART_LIGHT_COLOR;
-			this.light.intensity = SHIP_PART_LIGHT_INTENSITY;
-
-			return this.animateHit();
+			return body;
 		}
 	}, {
-		key: 'animateHit',
-		value: function animateHit() {
-			this.position.y -= SHIP_PART_SIZE;
+		key: 'getLight',
+		value: function getLight() {
+			var light = new _three2['default'].PointLight('white', 0, 2);
+			light.name = 'light';
+
+			return light;
+		}
+	}, {
+		key: 'getShadow',
+		value: function getShadow() {
+			var shadow = new _three2['default'].Mesh(SHIP_PART_SHADOW_GEOMETRY, SHIP_PART_SHADOW_MATERIAL);
+			shadow.name = 'shadow';
+			shadow.rotation.x = -Math.PI / 2;
+			shadow.position.set(-0.05, -SHIP_PART_SIZE / 2 + 0.001, -0.05);
+			shadow.visible = this.playerModel.type === 'human';
+
+			return shadow;
+		}
+	}, {
+		key: 'takeHit',
+		value: function takeHit() {
+			var _this = this;
+
+			this.body.material = SHIP_PART_BODY_MATERIALS.hit;
+			this.light.color = HIT_SHIP_PART_LIGHT_COLOR;
+			this.bodyWrapper.position.y -= SHIP_PART_SIZE;
 
 			var relativeUp = 1 + SHIP_PART_SIZE;
 			var relativeDown = 1;
+			var upDelay = 100;
+			var upDuration = 200;
+			var downDuration = 400;
 
-			var tweenUp = new _tweenJs2['default'].Tween(this.position).to({ y: String(relativeUp) }, 200 / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Sinusoidal.Out).delay(50 / _constants.ANIMATION_SPEED_FACTOR);
+			var tweenUp = new _tweenJs2['default'].Tween(this.bodyWrapper.position).to({ y: String(relativeUp) }, upDuration / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Sinusoidal.Out).delay(upDelay / _constants.ANIMATION_SPEED_FACTOR).onStart(function () {
+				if (_this.playerModel.type === 'computer') {
+					_this.body.visible = true;
+					_this.shadow.visible = true;
+				}
+				_this.light.intensity = SHIP_PART_LIGHT_INTENSITY;
+			});
 
-			var tweenDown = new _tweenJs2['default'].Tween(this.position).to({ y: String(-relativeDown) }, 400 / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Bounce.Out);
+			var tweenDown = new _tweenJs2['default'].Tween(this.bodyWrapper.position).to({ y: String(-relativeDown) }, downDuration / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Bounce.Out);
+
+			var tweenShadow = new _tweenJs2['default'].Tween(this.shadow.scale).to({ x: [0.65, 1], y: [0.65, 1] }, downDuration / _constants.ANIMATION_SPEED_FACTOR).easing(_tweenJs2['default'].Easing.Bounce.Out).delay((upDelay + upDuration) / _constants.ANIMATION_SPEED_FACTOR);
 
 			tweenUp.chain(tweenDown);
 			tweenUp.start();
+			tweenShadow.start();
 
 			var promise = new Promise(function (resolve, reject) {
 				tweenDown.onComplete(function () {
@@ -42085,6 +42113,8 @@ var ShipPart = (function (_THREE$Group) {
 
 			this.light.color = SUNK_SHIP_PART_LIGHT_COLOR;
 			this.light.intensity = SHIP_PART_LIGHT_INTENSITY;
+
+			this.shadow.visible = true;
 		}
 	}]);
 
@@ -42127,7 +42157,22 @@ function getBodyMaterials() {
 	};
 }
 
-},{"../../constants":93,"./Tile":112,"three":91,"tween.js":92}],112:[function(require,module,exports){
+function getShipPartShadowGeometry() {
+	'use strict';
+	return new _three2['default'].CircleGeometry(SHIP_PART_SIZE / 2, 8);
+}
+
+function getShipPartShadowMaterial() {
+	'use strict';
+	return new _three2['default'].MeshLambertMaterial({
+		color: 'black',
+		shading: _three2['default'].FlatShading,
+		transparent: true,
+		opacity: 0.65
+	});
+}
+
+},{"../../constants":93,"three":91,"tween.js":92}],112:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -42172,12 +42217,12 @@ var Tile = (function (_THREE$Mesh) {
 		_get(Object.getPrototypeOf(Tile.prototype), 'constructor', this).call(this, TILE_GEOMETRY, TILE_MATERIALS['default']);
 
 		this.name = 'tile';
-		this.receiveShadow = true;
 
 		var hasShipPart = playerModel.board.hasShipPartAtCoordinate(coordinate);
 
 		if (hasShipPart) {
 			this.shipPart = new _ShipPart2['default'](playerModel);
+			this.shipPart.translateY(TILE_HEIGHT / 2);
 			this.add(this.shipPart);
 		}
 
