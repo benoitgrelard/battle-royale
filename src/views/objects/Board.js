@@ -21,15 +21,15 @@ export default class Board extends THREE.Group {
 
 		const BOARD_SIZE = (gameModel.boardSize * TILE_SIZE) + ((gameModel.boardSize - 1) * CELL_GAP);
 
-		for (let y=0; y<gameModel.boardSize; y++) {
-			for (let x=0; x<gameModel.boardSize; x++) {
+		for (let y = 0; y < gameModel.boardSize; y++) {
+			for (let x = 0; x < gameModel.boardSize; x++) {
 
 				let coordinate = new Coordinate({ x, y });
 				let cellObject = new Cell(gameModel, coordinate);
 
-				let initialOffset = TILE_SIZE/2;
+				let initialOffset = TILE_SIZE / 2;
 				let incrementOffset = TILE_SIZE + CELL_GAP;
-				let centerInBoardOffset = -BOARD_SIZE/2;
+				let centerInBoardOffset = -BOARD_SIZE / 2;
 
 				cellObject.translateX(initialOffset + x * incrementOffset + centerInBoardOffset);
 				cellObject.translateZ(initialOffset + y * incrementOffset + centerInBoardOffset);
@@ -67,7 +67,7 @@ export default class Board extends THREE.Group {
 
 	sinkShip (playerModel, ship) {
 		let shipPartCoordinates = playerModel.board.getAllShipPartCoordinates(ship);
-		shipPartCoordinates.forEach((coordinate, index) => {
+		shipPartCoordinates.forEach(coordinate => {
 			let shipPart = this.getCell(coordinate).getSide(playerModel).tile.shipPart;
 			shipPart.sink();
 		});
@@ -76,14 +76,14 @@ export default class Board extends THREE.Group {
 	hover (time) {
 		this.rotation.y += 0.00025;
 
-		this.children.forEach((cellPivot, index) => {
+		this.children.forEach(cellPivot => {
 			let { x, y } = cellPivot.cell.userData;
-			cellPivot.position.y = Math.sin(time/1000 + (x+y)/5) * 0.25;
+			cellPivot.position.y = Math.sin(time / 1000 + (x + y) / 5) * 0.25;
 		});
 	}
 
 	showSide (playerModel) {
-		let promise = new Promise((resolve, reject) => {
+		let promise = new Promise(resolve => {
 			let cells = this.children.map(cellPivot => cellPivot.cell);
 			let isHuman = playerModel.type === 'human';
 			let angle = isHuman ? Math.PI : -Math.PI;
@@ -97,7 +97,7 @@ export default class Board extends THREE.Group {
 		function animateCell (cells, cell, index, isHuman, angle, resolve) {
 			let { x, y } = cell.userData;
 			let size = Math.sqrt(cells.length);
-			let circularDistance = Math.sqrt( Math.pow( isHuman ? x : size-x, 2) + Math.pow( isHuman ? y : size-y, 2) );
+			let circularDistance = Math.sqrt( Math.pow( isHuman ? x : size - x, 2) + Math.pow( isHuman ? y : size - y, 2) );
 
 			let tween = new TWEEN.Tween(cell.rotation)
 				.to({ x: String(angle) }, 2000 / ANIMATION_SPEED_FACTOR)
@@ -105,22 +105,22 @@ export default class Board extends THREE.Group {
 				.easing(TWEEN.Easing.Elastic.Out)
 				.start();
 
-			if (index === (isHuman ? cells.length-1 : 0)) {
+			if (index === (isHuman ? cells.length - 1 : 0)) {
 				tween.onComplete(() => resolve());
 			}
 		}
 	}
 
 	animateImpact (impactCoordinate, force) {
-		let promise = new Promise((resolve, reject) => {
+		let promise = new Promise(resolve => {
 			let cells = this.children.map(cellPivot => cellPivot.cell);
-			cells.forEach((cell, index) => animateCell(cell, index, impactCoordinate, force, cells, resolve));
+			cells.forEach((cell, index) => animateCell(cell, index, cells, resolve));
 		});
 
 		return promise;
 
 
-		function animateCell (cell, index, impactCoordinate, force, cells, resolve) {
+		function animateCell (cell, index, cells, resolve) {
 			let { x: xP, y: yP } = impactCoordinate;
 			let { x, y } = cell.userData;
 			let circularDistanceFromImpact = Math.sqrt( Math.pow(xP - x, 2) + Math.pow(yP - y, 2) );
@@ -130,7 +130,7 @@ export default class Board extends THREE.Group {
 
 			let tween = new TWEEN.Tween(props)
 				.to({
-					posY: [ cell.position.y, (10-circularDistanceFromImpact) * -0.1 * force, cell.position.y ],
+					posY: [ cell.position.y, (10 - circularDistanceFromImpact) * -0.1 * force, cell.position.y ],
 					rotX: [ rotX, rotX + THREE.Math.degToRad((yP - y) * 2 * force), rotX ],
 					rotZ: [ rotZ, rotZ + THREE.Math.degToRad((xP - x) * 2 * force), rotZ ]
 				}, 2000 / ANIMATION_SPEED_FACTOR)
@@ -143,7 +143,7 @@ export default class Board extends THREE.Group {
 				})
 				.start();
 
-			if (index === cells.length-1) {
+			if (index === cells.length - 1) {
 				tween.onComplete(() => resolve());
 			}
 		}

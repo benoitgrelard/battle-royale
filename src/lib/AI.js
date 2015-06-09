@@ -14,9 +14,9 @@ export default class AI {
 
 		function initHitMap(size) {
 			let hitMap = new Array(size);
-			for (let x=0; x<size; x++) {
+			for (let x = 0; x < size; x++) {
 				hitMap[x] = new Array(size);
-				for (let y=0; y<size; y++) {
+				for (let y = 0; y < size; y++) {
 					hitMap[x][y] = {
 						coordinate: new Coordinate({ x, y }),
 						tried: false,

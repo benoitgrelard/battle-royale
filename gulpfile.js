@@ -1,5 +1,3 @@
-/* jshint node: true */
-
 var assign = require('lodash.assign');
 var babelify = require('babelify');
 var browserify = require('browserify');
@@ -7,7 +5,7 @@ var browserSync = require('browser-sync');
 var del = require('del');
 var ghpages = require('gh-pages');
 var gulp = require('gulp');
-var jshint = require('gulp-jshint');
+var eslint = require('gulp-eslint');
 var path = require('path');
 var util = require('gulp-util');
 var reload = browserSync.reload;
@@ -32,17 +30,14 @@ var distPath = './dist/';
 gulp.task('default', ['dev']);
 
 gulp.task('dev', function(callback) {
-	'use strict';
 	runSequence('clean', 'lint', ['html', 'css'], 'serve', 'watch', callback);
 });
 
 gulp.task('build', function(callback) {
-	'use strict';
 	runSequence('clean', 'lint', ['html', 'css', 'js'], callback);
 });
 
 gulp.task('deploy', function(callback) {
-	'use strict';
 	runSequence('build', 'deploy-gh-pages', callback);
 });
 
@@ -52,33 +47,32 @@ gulp.task('deploy', function(callback) {
  * ============================================================================
  */
 gulp.task('lint', function() {
-	'use strict';
-	return gulp.src(['gulpfile.js', sourcePath + '**/*.js'])
-			   .pipe(jshint())
-			   .pipe(jshint.reporter('default'));
+	return gulp
+			.src(['gulpfile.js', sourcePath + '**/*.js'])
+			.pipe(eslint())
+			.pipe(eslint.format())
+			.pipe(eslint.failOnError());
 });
 
 gulp.task('clean', function() {
-	'use strict';
 	return del(distPath + '**');
 });
 
 gulp.task('html', function() {
-	'use strict';
-	return gulp.src(sourcePath + 'index.html')
-			   .pipe(gulp.dest(distPath));
+	return gulp
+			.src(sourcePath + 'index.html')
+			.pipe(gulp.dest(distPath));
 });
 
 
 gulp.task('css', function() {
-	'use strict';
-	return gulp.src(sourcePath + 'styles/main.css')
-			   .pipe(gulp.dest(distPath));
+	return gulp
+			.src(sourcePath + 'styles/main.css')
+			.pipe(gulp.dest(distPath));
 });
 
 
 gulp.task('js', function() {
-	'use strict';
 	var options = {
 		entries: [sourcePath + 'main.js'],
 		debug: false
@@ -93,7 +87,6 @@ gulp.task('js', function() {
 
 
 gulp.task('serve', function() {
-	'use strict';
 	return browserSync({
 			server: {
 				baseDir: distPath,
@@ -103,7 +96,6 @@ gulp.task('serve', function() {
 });
 
 gulp.task('watch', function() {
-	'use strict';
 
 	watchHtml();
 	watchCss();
@@ -149,6 +141,5 @@ gulp.task('watch', function() {
 });
 
 gulp.task('deploy-gh-pages', function(cb) {
-	'use strict';
 	return ghpages.publish(path.join(process.cwd(), distPath), cb);
 });

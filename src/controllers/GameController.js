@@ -77,7 +77,7 @@ export default class GameController {
 
 		if (!humanPlayerIsSunk && !computerPlayerIsSunk) { return false; }
 
-		window.alert((humanPlayerIsSunk ? this.model.computerPlayer : this.model.humanPlayer).name + ' wins!');
+		window.console.log((humanPlayerIsSunk ? this.model.computerPlayer : this.model.humanPlayer).name + ' wins!');
 
 		this.model.humanPlayer.isActive = false;
 		this.model.computerPlayer.isActive = false;

@@ -38,7 +38,7 @@ export default class ShipPart extends THREE.Group {
 		this.shadow = this.getShadow();
 		this.add(this.shadow);
 
-		this.translateY(SHIP_PART_SIZE/2);
+		this.translateY(SHIP_PART_SIZE / 2);
 	}
 
 	getBody () {
@@ -59,8 +59,8 @@ export default class ShipPart extends THREE.Group {
 	getShadow () {
 		let shadow = new THREE.Mesh(SHIP_PART_SHADOW_GEOMETRY, SHIP_PART_SHADOW_MATERIAL);
 		shadow.name = 'shadow';
-		shadow.rotation.x = -Math.PI/2;
-		shadow.position.set(-0.05, -SHIP_PART_SIZE/2 + 0.001, -0.05);
+		shadow.rotation.x = -Math.PI / 2;
+		shadow.position.set(-0.05, -SHIP_PART_SIZE / 2 + 0.001, -0.05);
 		shadow.visible = this.playerModel.type === 'human';
 
 		return shadow;
@@ -102,7 +102,7 @@ export default class ShipPart extends THREE.Group {
 		tweenUp.start();
 		tweenShadow.start();
 
-		let promise = new Promise((resolve, reject) => {
+		let promise = new Promise(resolve => {
 			tweenDown.onComplete(() => resolve());
 		});
 
@@ -124,13 +124,10 @@ export default class ShipPart extends THREE.Group {
 
 
 function getBodyGeometry () {
-	'use strict';
-	return new THREE.IcosahedronGeometry(SHIP_PART_SIZE/2, 1);
+	return new THREE.IcosahedronGeometry(SHIP_PART_SIZE / 2, 1);
 }
 
 function getBodyMaterials () {
-	'use strict';
-
 	return {
 		default: new THREE.MeshPhongMaterial({
 			color: 'white',
@@ -145,7 +142,7 @@ function getBodyMaterials () {
 			emissive: 'rgb(40, 8, 30)',
 			specular: 'rgb(190,190,190)',
 			shininess: 40,
-			shading: THREE.FlatShading,
+			shading: THREE.FlatShading
 		}),
 
 		sunk: new THREE.MeshPhongMaterial({
@@ -159,12 +156,10 @@ function getBodyMaterials () {
 }
 
 function getShipPartShadowGeometry() {
-	'use strict';
-	return new THREE.CircleGeometry(SHIP_PART_SIZE/2, 8);
+	return new THREE.CircleGeometry(SHIP_PART_SIZE / 2, 8);
 }
 
 function getShipPartShadowMaterial() {
-	'use strict';
 	return new THREE.MeshLambertMaterial({
 		color: 'black',
 		shading: THREE.FlatShading,

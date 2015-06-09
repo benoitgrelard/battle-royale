@@ -22,11 +22,11 @@ export default class Tile extends THREE.Mesh {
 
 		if (hasShipPart) {
 			this.shipPart = new ShipPart(playerModel);
-			this.shipPart.translateY(TILE_HEIGHT/2);
+			this.shipPart.translateY(TILE_HEIGHT / 2);
 			this.add(this.shipPart);
 		}
 
-		this.translateY(TILE_HEIGHT/2);
+		this.translateY(TILE_HEIGHT / 2);
 	}
 
 	markAsMissed () {
@@ -38,13 +38,10 @@ export default class Tile extends THREE.Mesh {
 
 
 function getGeometry () {
-	'use strict';
 	return new THREE.BoxGeometry(TILE_SIZE, TILE_HEIGHT, TILE_SIZE);
 }
 
 function getMaterials () {
-	'use strict';
-
 	return {
 		default: new THREE.MeshLambertMaterial({
 			color: 'grey',

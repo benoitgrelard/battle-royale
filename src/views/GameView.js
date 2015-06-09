@@ -85,8 +85,8 @@ export default class GameView extends View {
 
 		output += `<div class="Board ${typeModifer} ${playableModifier}">`;
 
-		for (let y=0; y<board.grid.length; y++) {
-			for (let x=0; x<board.grid.length; x++) {
+		for (let y = 0; y < board.grid.length; y++) {
+			for (let x = 0; x < board.grid.length; x++) {
 				let coordinate = new Coordinate({ x, y });
 				let hasShipPart = board.hasShipPartAtCoordinate(coordinate);
 				let classModifier = '';

@@ -1,22 +1,19 @@
 export function $ (selector) {
-	'use strict';
 	return document.querySelectorAll(selector);
 }
 
 export function getRandomInt (min, max) {
-	'use strict';
 	return Math.floor(Math.random() * (max - min)) + min;
 }
 
 export function getRandomBoolean () {
-	'use strict';
 	return Math.random() < 0.5;
 }
 
-export function log3d (object) {
-	'use strict';
+export function log3d (rootObject) {
 
-	logLevel(object);
+	logLevel(rootObject);
+
 
 	function logLevel (object) {
 		let hasChildren = object.children.length;

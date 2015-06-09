@@ -23,7 +23,7 @@ export default class Model extends EventEmitter {
 				set: function(value) {
 					let oldValue = this[attributeKey];
 
-					if (!this._$attributeHasChanged(value, oldValue)) { return; }
+					if (!this._$attributeHasChanged(value, oldValue)) { return this; }
 
 					// set value
 					attributes[attributeKey] = value;

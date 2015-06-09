@@ -58,7 +58,7 @@ export default class Player extends Model {
 	}
 
 	takeHit (coordinate) {
-		if (this.isActive) { return; }
+		if (this.isActive) { return null; }
 		return this.board.takeHit(coordinate);
 	}
 

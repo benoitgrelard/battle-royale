@@ -74,7 +74,7 @@ export default class Missile extends THREE.Group {
 			});
 
 		let tweenDown = new TWEEN.Tween(this.position)
-			.to({y: (TILE_HEIGHT + MISSILE_HEIGHT)/2}, 400 / ANIMATION_SPEED_FACTOR)
+			.to({y: (TILE_HEIGHT + MISSILE_HEIGHT) / 2}, 400 / ANIMATION_SPEED_FACTOR)
 			.easing(TWEEN.Easing.Exponential.In)
 			.onUpdate(() => {
 				this.body.rotation.y += 0.1;
@@ -84,7 +84,7 @@ export default class Missile extends THREE.Group {
 		tweenUp.chain(tweenDown);
 		tweenUp.start();
 
-		let promise = new Promise((resolve, reject) => {
+		let promise = new Promise(resolve => {
 			tweenDown.onComplete(() => {
 				this.hide();
 				resolve();
@@ -99,13 +99,10 @@ export default class Missile extends THREE.Group {
 
 
 function getBodyGeometry () {
-	'use strict';
 	return new THREE.CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
 }
 
 function getBodyMaterial () {
-	'use strict';
-
 	return new THREE.MeshLambertMaterial({
 		color: 0x00ff88,
 		emissive: 0x008822,
@@ -115,8 +112,6 @@ function getBodyMaterial () {
 }
 
 function getTrailGeometry() {
-	'use strict';
-
 	let lineGeometry = new THREE.Geometry();
 	lineGeometry.vertices.push(
 		new THREE.Vector3(0, 100, 0),
@@ -127,8 +122,6 @@ function getTrailGeometry() {
 }
 
 function getTrailMaterial () {
-	'use strict';
-
 	return new THREE.LineBasicMaterial({
 		color: 'green',
 		transparent: true,

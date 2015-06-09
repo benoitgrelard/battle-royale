@@ -15,7 +15,7 @@ import Missile from './objects/Missile';
 
 
 /**
- * @class  Game3dView
+ * @class Game3dView
  */
 export default class Game3dView extends View {
 
@@ -63,13 +63,13 @@ export default class Game3dView extends View {
 	getSceneLights () {
 		let ambientLight = new THREE.AmbientLight(0x222222);
 
-		let topLight = new THREE.SpotLight(0xffffff, 0.65, 50, Math.PI/6, 1);
+		let topLight = new THREE.SpotLight(0xffffff, 0.65, 50, Math.PI / 6, 1);
 		topLight.position.set(5, 30, 5);
 
-		let redLight = new THREE.SpotLight(0xff0000, 0.65, 50, Math.PI/8);
+		let redLight = new THREE.SpotLight(0xff0000, 0.65, 50, Math.PI / 8);
 		redLight.position.set(-30, 5, 15);
 
-		let blueLight = new THREE.SpotLight(0x0000ff, 0.65, 50, Math.PI/8);
+		let blueLight = new THREE.SpotLight(0x0000ff, 0.65, 50, Math.PI / 8);
 		blueLight.position.set(-30, 5, -15);
 
 		return [
@@ -102,12 +102,12 @@ export default class Game3dView extends View {
 		renderer.setClearColor(0x111111);
 		// renderer.setPixelRatio(window.devicePixelRatio);
 
-		initSize(renderer, camera);
+		initSize();
 
 		return renderer;
 
 
-		function initSize(renderer, camera) {
+		function initSize() {
 			renderer.setSize(window.innerWidth, window.innerHeight);
 
 			window.addEventListener('resize', () => {
@@ -118,7 +118,7 @@ export default class Game3dView extends View {
 		}
 	}
 
-	render (time) {
+	render () {
 		this.renderer.render(this.scene, this.camera);
 	}
 
@@ -129,7 +129,7 @@ export default class Game3dView extends View {
 		this.controls.update();
 		this.board.hover(time);
 
-		this.render(time);
+		this.render();
 	}
 
 	addEventListeners () {

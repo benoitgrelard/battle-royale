@@ -22,9 +22,9 @@ export default class Board extends Model {
 
 		function initGrid(size) {
 			let grid = new Array(size);
-			for (let x=0; x<size; x++) {
+			for (let x = 0; x < size; x++) {
 				grid[x] = new Array(size);
-				for (let y=0; y<size; y++) {
+				for (let y = 0; y < size; y++) {
 					grid[x][y] = CELL_INIT;
 				}
 			}
@@ -81,8 +81,8 @@ export default class Board extends Model {
 
 	getAllShipPartCoordinates (ship) {
 		let shipPartCoordinates = [];
-		for (let y=0; y<this.size; y++) {
-			for (let x=0; x<this.size; x++) {
+		for (let y = 0; y < this.size; y++) {
+			for (let x = 0; x < this.size; x++) {
 				let coordinate = new Coordinate({ x, y });
 				if (this.hasShipPartAtCoordinate(coordinate)) {
 					let shipPart = this.getAtCoordinate(coordinate);

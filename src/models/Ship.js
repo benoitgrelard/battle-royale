@@ -19,7 +19,7 @@ export default class Ship extends Model {
 
 		function initParts(ship, size) {
 			let parts = [];
-			for (let i=0; i<size; i++) {
+			for (let i = 0; i < size; i++) {
 				parts[i] = new ShipPart({ ship });
 			}
 			return parts;
