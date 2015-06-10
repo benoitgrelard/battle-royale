@@ -4,26 +4,13 @@ body {
 	overflow: hidden;
 }
 
-#view2d {
-	width: 100%;
-	height: 100%;
 
-	position: absolute;
-	top: 0;
-	left: 0;
-}
-
-#view3d {
-	width: 100%;
-	height: 100%;
-
-	position: relative;
-	z-index: 1;
-	/*pointer-events: none;*/
-}
-
+/**
+ * DEBUG VIEW STYLES
+ */
 
 .Player {
+	display: inline-block;
 	margin-right: 20px;
 }
 
@@ -38,11 +25,9 @@ body {
 	align-content: space-between;
 	flex-direction: row;
 
-	opacity: 0.1;
 	pointer-events: none;
 }
 .Board.-playable {
-	opacity: 1;
 	pointer-events: auto;
 }
 .Board.-human { pointer-events: none; }
