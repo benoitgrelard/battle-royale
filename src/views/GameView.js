@@ -63,7 +63,7 @@ export default class GameView extends View {
 	getSceneLights () {
 		let ambientLight = new THREE.AmbientLight(0x222222);
 
-		let topLight = new THREE.SpotLight(0xffffff, 0.65, 50, Math.PI / 6, 1);
+		let topLight = new THREE.SpotLight(0xffffff, 0.5, 50, Math.PI / 6, 1);
 		topLight.position.set(5, 30, 5);
 
 		let redLight = new THREE.SpotLight(0xff0000, 0.65, 50, Math.PI / 8);
