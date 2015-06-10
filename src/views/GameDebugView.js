@@ -10,9 +10,9 @@ import {
 
 
 /**
- * @class GameView
+ * @class GameDebugView
  */
-export default class GameView extends View {
+export default class GameDebugView extends View {
 
 	constructor (model, element) {
 		super(model, element);
