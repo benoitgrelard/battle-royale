@@ -74,11 +74,11 @@ export default class Board extends THREE.Group {
 	}
 
 	hover (time) {
-		this.rotation.y += 0.00025;
+		// this.rotation.y += 0.00025;
 
 		this.children.forEach(cellPivot => {
 			let { x, y } = cellPivot.cell.userData;
-			cellPivot.position.y = Math.sin(time / 1000 + (x + y) / 5) * 0.25;
+			cellPivot.position.y = Math.sin(time / 1000 + (x + y) / 5) * 0.35;
 		});
 	}
 
