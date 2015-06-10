@@ -15,9 +15,9 @@ import Missile from './objects/Missile';
 
 
 /**
- * @class Game3dView
+ * @class GameView
  */
-export default class Game3dView extends View {
+export default class GameView extends View {
 
 	constructor (model, element) {
 		super(model, element);

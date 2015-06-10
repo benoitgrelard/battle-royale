@@ -1,19 +1,11 @@
 import 'babelify/polyfill';
 
 import Game from './models/Game';
-// import GameDebugView from './views/GameDebugView';
-import Game3dView from './views/Game3dView';
+import GameView from './views/GameView';
 import GameController from './controllers/GameController';
-import { $ } from './lib/helpers';
 
 let gameModel = new Game();
-// let gameDebugView = new GameDebugView(gameModel, $('#view2d')[0]);
-let game3dView = new Game3dView(gameModel, $('#view3d')[0]);
-// let gameController1 = new GameController(gameModel, gameDebugView);
-let gameController2 = new GameController(gameModel, game3dView);
+let gameView = new GameView(gameModel);
+let gameController = new GameController(gameModel, gameView);
 
-window.gameModel = gameModel;
-// window.gameDebugView = gameDebugView;
-window.game3dView = game3dView;
-// window.gameController1 = gameController1;
-window.gameController2 = gameController2;
+console.log(gameController);
