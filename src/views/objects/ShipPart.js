@@ -156,7 +156,7 @@ function getBodyMaterials () {
 }
 
 function getShipPartShadowGeometry() {
-	return new THREE.CircleGeometry(SHIP_PART_SIZE / 2, 8);
+	return new THREE.CircleGeometry(SHIP_PART_SIZE / 2 * 0.9, 12);
 }
 
 function getShipPartShadowMaterial() {
@@ -164,6 +164,6 @@ function getShipPartShadowMaterial() {
 		color: 'black',
 		shading: THREE.FlatShading,
 		transparent: true,
-		opacity: 0.65
+		opacity: 0.45
 	});
 }
