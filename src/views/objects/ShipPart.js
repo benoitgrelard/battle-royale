@@ -7,7 +7,6 @@ import { ANIMATION_SPEED_FACTOR } from '../../constants';
 export const SHIP_PART_SIZE = 0.75;
 export const SHIP_PART_LIGHT_INTENSITY = 3;
 export const HIT_SHIP_PART_LIGHT_COLOR = new THREE.Color('red');
-export const SUNK_SHIP_PART_LIGHT_COLOR = new THREE.Color('blue');
 export const SHIP_PART_BODY_GEOMETRY = getBodyGeometry();
 export const SHIP_PART_BODY_MATERIALS = getBodyMaterials();
 export const SHIP_PART_SHADOW_GEOMETRY = getShipPartShadowGeometry();
@@ -112,10 +111,7 @@ export default class ShipPart extends THREE.Group {
 	sink () {
 		this.body.material = SHIP_PART_BODY_MATERIALS.sunk;
 		this.body.visible = true;
-
-		this.light.color = SUNK_SHIP_PART_LIGHT_COLOR;
-		this.light.intensity = SHIP_PART_LIGHT_INTENSITY;
-
+		this.light.intensity = 0;
 		this.shadow.visible = true;
 	}
 
@@ -148,7 +144,7 @@ function getBodyMaterials () {
 		sunk: new THREE.MeshPhongMaterial({
 			color: 0x111111,
 			emissive: 'rgb(5, 1, 4)',
-			specular: 'rgb(190,190,190)',
+			specular: 'rgb(50,50,50)',
 			shininess: 40,
 			shading: THREE.FlatShading
 		})
