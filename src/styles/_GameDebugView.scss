@@ -1,0 +1,34 @@
+.Player {
+	display: inline-block;
+	margin-right: 20px;
+}
+
+.Board {
+	display: flex;
+	width: 209px;
+	height: 209px;
+
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-content: space-between;
+	flex-direction: row;
+
+	pointer-events: none;
+
+	&.-playable { pointer-events: auto; }
+	&.-human { pointer-events: none; }
+}
+
+.Board-cell {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+	background-color: #eee;
+	cursor: pointer;
+
+	&:hover { background-color: #ccc; }
+	&.-ship { background-color: #999; }
+	&.-hit { background-color: red; }
+	&.-sunk { background-color: black; }
+	&.-missed { background-color: blue; }
+}
