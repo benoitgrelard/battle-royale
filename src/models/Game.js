@@ -4,6 +4,9 @@ import { DEFAULT_BOARD_SIZE } from './Board';
 
 
 
+export const PHASE_INTRO = 'intro';
+export const PHASE_PLAY = 'play';
+
 /**
  * @class Game
  */
@@ -19,7 +22,8 @@ export default class Game extends Model {
 				name: 'Agent Smith',
 				type: 'computer'
 			}),
-			boardSize: DEFAULT_BOARD_SIZE
+			boardSize: DEFAULT_BOARD_SIZE,
+			phase: PHASE_INTRO
 		}, attributes));
 	}
 

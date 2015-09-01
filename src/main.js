@@ -9,3 +9,5 @@ let gameView = new GameView(gameModel);
 let gameController = new GameController(gameModel, gameView);
 
 console.log(gameController);
+
+window.gameController = gameController;

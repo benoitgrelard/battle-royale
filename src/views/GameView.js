@@ -3,6 +3,7 @@ import TWEEN from 'tween.js';
 import View from '../lib/View';
 import createOrbitControls from 'three-orbit-controls';
 import Coordinate from '../models/Coordinate';
+import { PHASE_INTRO, PHASE_PLAY } from '../models/Game';
 import {
 	VIEW_EVENT__SHOOT_REQUESTED,
 	MODEL_EVENT__SHOT,
@@ -82,9 +83,7 @@ export default class GameView extends View {
 
 	getCamera () {
 		let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-		camera.position.x = -10;
-		camera.position.y = 18;
-		camera.position.z = 17;
+		camera.position.set(-2, 8, 3);
 
 		return camera;
 	}
@@ -125,11 +124,22 @@ export default class GameView extends View {
 	animate (time) {
 		window.requestAnimationFrame(this.animate.bind(this));
 
+		let isPlay = this.model.phase === PHASE_INTRO;
+
 		TWEEN.update();
 		this.controls.update();
-		this.board.hover(time);
+		this.board.hover(time, isPlay);
+
+		if (isPlay) {
+			this.animateLights(time);
+		}
 
 		this.render();
+	}
+
+	animateLights (time) {
+		this.scenelights[2].intensity = 0.65 + (Math.sin(time / 1000) + 1) / 2;
+		this.scenelights[3].intensity = 0.65 + (Math.sin((time + 1000) / 1000) + 1);
 	}
 
 	addEventListeners () {
@@ -138,6 +148,7 @@ export default class GameView extends View {
 		this.rootElement.addEventListener('mousedown', this.handleViewClicked.bind(this));
 
 		// model events
+		this.model.on('changed:phase', this.onPhaseChanged.bind(this));
 		this.model.humanPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 		this.model.computerPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 		this.model.humanPlayer.on('changed:isActive', this.onPlayerActivationChanged.bind(this));
@@ -154,6 +165,7 @@ export default class GameView extends View {
 	}
 
 	handleViewClicked (event) {
+		this.model.phase = PHASE_PLAY;
 		if (!this.model.humanPlayer.canPlay) { return; }
 
 		let clickedTile = this.getIntersectedComputerTileFromEvent(event);
@@ -183,6 +195,15 @@ export default class GameView extends View {
 		let intersectedComputerTiles = intersections.map(intersection => intersection.object);
 
 		return intersectedComputerTiles.length ? intersectedComputerTiles[0] : null;
+	}
+
+	onPhaseChanged (eventName, data) {
+		let phase = data.newValue;
+		if (phase === PHASE_PLAY) {
+			this.camera.position.set(-10, 18, 17);
+			this.rootElement.querySelector('.Intro').classList.add('-hidden');
+			this.scenelights[2].intensity = this.scenelights[3].intensity = 0.65;
+		}
 	}
 
 	onPlayerShot (eventName, data, player) {

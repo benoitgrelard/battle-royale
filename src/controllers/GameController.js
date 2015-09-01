@@ -1,5 +1,6 @@
 import Coordinate from '../models/Coordinate';
 import AI, { CONST_AI_DELAY } from '../lib/AI';
+import { PHASE_PLAY } from '../models/Game';
 import {
 	VIEW_EVENT__SHOOT_REQUESTED,
 	MODEL_EVENT__SHOT,
@@ -21,7 +22,6 @@ export default class GameController {
 		this.verbose = false;
 
 		// delay initial turn
-		setTimeout(() => this.start(), 2000);
 
 		// view events
 		this.view.on(VIEW_EVENT__SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));
@@ -29,12 +29,20 @@ export default class GameController {
 		this.view.on(VIEW_EVENT__BOARD_READY, this.onBoardReady.bind(this));
 
 		// model events
+		this.model.on('changed:phase', this.onPhaseChanged.bind(this));
 		this.model.humanPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 		this.model.computerPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 	}
 
 	start () {
 		this.giveTurnTo(this.model.humanPlayer);
+	}
+
+	onPhaseChanged (eventName, data) {
+		let phase = data.newValue;
+		if (phase === PHASE_PLAY) {
+			setTimeout(() => this.start(), 2000);
+		}
 	}
 
 	onHumanPlayerRequestedShoot (eventName, data) {

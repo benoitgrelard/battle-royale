@@ -1,0 +1,46 @@
+.Intro {
+	display: flex;
+
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+
+	background-color: rgba(black, 0.5);
+
+	&.-hidden { display: none; }
+}
+
+.Intro-title {
+	position: relative;
+	margin: 0;
+
+	font-family: 'Megrim';
+	font-size: 3em;
+	font-weight: normal;
+	text-transform: uppercase;
+}
+
+.Intro-subtitle {
+	margin: 0;
+
+	font-size: 0.65em;
+	font-weight: normal;
+	text-transform: uppercase;
+
+	&::before,
+	&::after {
+		content: "";
+
+		display: inline-block;
+		height: 1px;
+		width: 25px;
+
+		position: relative;
+		top: -2px;
+
+		background-color: currentcolor;
+	}
+
+	&::before { margin-right: 5px; }
+	&::after { margin-left: 5px; }
+}

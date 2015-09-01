@@ -73,8 +73,10 @@ export default class Board extends THREE.Group {
 		});
 	}
 
-	hover (time) {
-		// this.rotation.y += 0.00025;
+	hover (time, isPlay) {
+		if (isPlay) {
+			this.rotation.y += 0.0025;
+		}
 
 		this.children.forEach(cellPivot => {
 			let { x, y } = cellPivot.cell.userData;
