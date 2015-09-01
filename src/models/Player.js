@@ -62,4 +62,8 @@ export default class Player extends Model {
 		return this.board.takeHit(coordinate);
 	}
 
+	getNumHits () {
+		return this.fleet.reduce((numHits, ship) => numHits + ship.getNumHits(), 0);
+	}
+
 }
