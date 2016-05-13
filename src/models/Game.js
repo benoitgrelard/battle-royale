@@ -3,13 +3,12 @@ import Player from './Player';
 import { DEFAULT_BOARD_SIZE } from './Board';
 
 
-
 /**
  * @class Game
  */
 export default class Game extends Model {
 
-	constructor (attributes) {
+	constructor(attributes) {
 		super(Object.assign({
 			humanPlayer: new Player({
 				name: 'Neo',

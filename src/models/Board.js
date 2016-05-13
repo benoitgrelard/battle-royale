@@ -4,7 +4,6 @@ import ShipPart from './ShipPart';
 import { CELL_INIT, CELL_MISSED, MODEL_EVENT__SHOT } from '../constants';
 
 
-
 export const DEFAULT_BOARD_SIZE = 10;
 
 /**
@@ -12,43 +11,43 @@ export const DEFAULT_BOARD_SIZE = 10;
  */
 export default class Board extends Model {
 
-	constructor (attributes) {
+	constructor(attributes) {
 		super(Object.assign({
 			size: DEFAULT_BOARD_SIZE,
 			grid: []
 		}, attributes));
 
-		this.grid = initGrid(this.size);
-
-		function initGrid(size) {
-			let grid = new Array(size);
-			for (let x = 0; x < size; x++) {
-				grid[x] = new Array(size);
-				for (let y = 0; y < size; y++) {
-					grid[x][y] = CELL_INIT;
-				}
-			}
-			return grid;
-		}
+		this.grid = this.initGrid(this.size);
 	}
 
-	deployShip (ship, startCoordinate, direction) {
+	initGrid(size) {
+		const grid = new Array(size);
+		for (let x = 0; x < size; x++) {
+			grid[x] = new Array(size);
+			for (let y = 0; y < size; y++) {
+				grid[x][y] = CELL_INIT;
+			}
+		}
+		return grid;
+	}
+
+	deployShip(ship, startCoordinate, direction) {
 		if (!this.canPlaceShip(ship, startCoordinate, direction)) { return false; }
 
-		let { x: xStart, y: yStart } = startCoordinate;
+		const { x: xStart, y: yStart } = startCoordinate;
 
 		if (direction === 'x') {
 			for (let x = xStart, partIndex = 0; x < xStart + ship.size; x++, partIndex++) {
-				let coordinate = new Coordinate({ x, y: yStart });
+				const coordinate = new Coordinate({ x, y: yStart });
 				this.setAtCoordinate(coordinate, ship.getPartAtIndex(partIndex));
 			}
 		}
 
 		if (direction === 'y') {
-			let yEnd = yStart + ship.size;
+			const yEnd = yStart + ship.size;
 			if (yEnd > this.size - 1) { return false; }
 			for (let y = yStart, partIndex = 0; y < yStart + ship.size; y++, partIndex++) {
-				let coordinate = new Coordinate({ x: xStart, y });
+				const coordinate = new Coordinate({ x: xStart, y });
 				this.setAtCoordinate(coordinate, ship.getPartAtIndex(partIndex));
 			}
 		}
@@ -56,22 +55,22 @@ export default class Board extends Model {
 		return true;
 	}
 
-	canPlaceShip (ship, startCoordinate, direction) {
-		let { x: xStart, y: yStart } = startCoordinate;
+	canPlaceShip(ship, startCoordinate, direction) {
+		const { x: xStart, y: yStart } = startCoordinate;
 		if (direction === 'x') {
-			let xEnd = xStart + ship.size;
+			const xEnd = xStart + ship.size;
 			if (xEnd > this.size - 1) { return false; }
 			for (let x = xStart; x < xEnd; x++) {
-				let coordinate = new Coordinate({ x, y: yStart });
+				const coordinate = new Coordinate({ x, y: yStart });
 				if (this.hasShipPartAtCoordinate(coordinate)) { return false; }
 			}
 		}
 
 		if (direction === 'y') {
-			let yEnd = yStart + ship.size;
+			const yEnd = yStart + ship.size;
 			if (yEnd > this.size - 1) { return false; }
 			for (let y = yStart; y < yEnd; y++) {
-				let coordinate = new Coordinate({ x: xStart, y });
+				const coordinate = new Coordinate({ x: xStart, y });
 				if (this.hasShipPartAtCoordinate(coordinate)) { return false; }
 			}
 		}
@@ -79,13 +78,13 @@ export default class Board extends Model {
 		return true;
 	}
 
-	getAllShipPartCoordinates (ship) {
-		let shipPartCoordinates = [];
+	getAllShipPartCoordinates(ship) {
+		const shipPartCoordinates = [];
 		for (let y = 0; y < this.size; y++) {
 			for (let x = 0; x < this.size; x++) {
-				let coordinate = new Coordinate({ x, y });
+				const coordinate = new Coordinate({ x, y });
 				if (this.hasShipPartAtCoordinate(coordinate)) {
-					let shipPart = this.getAtCoordinate(coordinate);
+					const shipPart = this.getAtCoordinate(coordinate);
 					if (shipPart.getShip().name === ship.name) {
 						shipPartCoordinates.push({ x, y });
 					}
@@ -95,28 +94,28 @@ export default class Board extends Model {
 		return shipPartCoordinates;
 	}
 
-	getAtCoordinate (coordinate) {
-		let { x, y } = coordinate;
+	getAtCoordinate(coordinate) {
+		const { x, y } = coordinate;
 		return this.grid[x][y];
 	}
 
-	setAtCoordinate (coordinate, value) {
-		let { x, y } = coordinate;
+	setAtCoordinate(coordinate, value) {
+		const { x, y } = coordinate;
 		this.grid[x][y] = value;
 	}
 
-	hasShipPartAtCoordinate (coordinate) {
+	hasShipPartAtCoordinate(coordinate) {
 		return this.getAtCoordinate(coordinate) instanceof ShipPart;
 	}
 
-	isCellMissed (coordinate) {
+	isCellMissed(coordinate) {
 		return this.getAtCoordinate(coordinate) === CELL_MISSED;
 	}
 
-	takeHit (coordinate) {
-		let hasShipPart = this.hasShipPartAtCoordinate(coordinate);
-		let cellContent = this.getAtCoordinate(coordinate);
-		let alreadyHit = this.isCellMissed(coordinate) || (hasShipPart && !cellContent.isIntact());
+	takeHit(coordinate) {
+		const hasShipPart = this.hasShipPartAtCoordinate(coordinate);
+		const cellContent = this.getAtCoordinate(coordinate);
+		const alreadyHit = this.isCellMissed(coordinate) || (hasShipPart && !cellContent.isIntact());
 
 		if (alreadyHit) { return false; }
 
@@ -127,14 +126,14 @@ export default class Board extends Model {
 		if (!hasShipPart) {
 			this.setAtCoordinate(coordinate, CELL_MISSED);
 		} else {
-			let shipPart = cellContent;
+			const shipPart = cellContent;
 			shipPart.takeHit();
 			hit = true;
 			ship = shipPart.getShip();
 			sunk = ship.isSunk();
 		}
 
-		let result = { coordinate, hit, sunk, ship };
+		const result = { coordinate, hit, sunk, ship };
 
 		this.emit(MODEL_EVENT__SHOT, result);
 

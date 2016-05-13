@@ -1,35 +1,36 @@
 import EventEmitter from './EventEmitter';
 
 
-
 /**
  * @class Model
  */
 export default class Model extends EventEmitter {
 
-	constructor (attributes) {
+	constructor(attributes) {
 		super();
 
 		this._$createGettersAndSetters(attributes);
 	}
 
-	_$createGettersAndSetters (attributes) {
-		for (let attributeKey in attributes) {
+	_$createGettersAndSetters(attributes) {
+		/* eslint-disable guard-for-in, no-restricted-syntax */
+		for (const attributeKey in attributes) {
+		/* eslint-enable guard-for-in */
 
 			Object.defineProperty(this, attributeKey, {
-				get: function() {
+				get() {
 					return attributes[attributeKey];
 				},
-				set: function(value) {
-					let oldValue = this[attributeKey];
+				set(value) {
+					const oldValue = this[attributeKey];
 
 					if (!this._$attributeHasChanged(value, oldValue)) { return this; }
 
 					// set value
-					attributes[attributeKey] = value;
+					attributes[attributeKey] = value; // eslint-disable-line
 
 					// emit change events
-					let eventPayload = {
+					const eventPayload = {
 						newValue: value,
 						oldValue,
 						attribute: attributeKey
@@ -43,12 +44,12 @@ export default class Model extends EventEmitter {
 			});
 
 			// set initial value
-			let attributeValue = attributes[attributeKey];
+			const attributeValue = attributes[attributeKey];
 			this[attributeKey] = attributeValue;
 		}
 	}
 
-	_$attributeHasChanged (value, oldValue) {
+	_$attributeHasChanged(value, oldValue) {
 		// TODO: will only work for primitives or references
 		return value !== oldValue;
 	}

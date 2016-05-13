@@ -1,30 +1,31 @@
 {
+  "name": "battle-royale",
+  "version": "0.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "test": "npm run lint",
+    "lint": "eslint ./src && echo No linting errors."
+  },
   "devDependencies": {
-    "babel-eslint": "^3.1.15",
-    "babelify": "^6.1.0",
-    "browser-sync": "^2.7.1",
-    "browserify": "^10.1.3",
-    "del": "^1.1.1",
-    "eslint": "^0.22.1",
-    "gh-pages": "^0.3.0",
-    "gulp": "^3.8.11",
-    "gulp-cssmin": "^0.1.7",
-    "gulp-eslint": "^0.13.2",
-    "gulp-htmlmin": "^1.1.2",
-    "gulp-if": "^1.2.5",
-    "gulp-sass": "^2.0.1",
-    "gulp-sourcemaps": "^1.5.2",
-    "gulp-uglify": "^1.2.0",
-    "gulp-util": "^3.0.4",
-    "lodash.assign": "^3.1.0",
-    "run-sequence": "^1.1.0",
-    "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0",
-    "watchify": "^3.2.1"
+    "eslint": "^2.9.0",
+    "eslint-config-airbnb-base": "^3.0.1",
+    "eslint-plugin-import": "^1.8.0"
   },
   "dependencies": {
     "three": "^0.71.0",
     "three-orbit-controls": "^69.0.4",
     "tween.js": "^0.14.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/artisologic/battle-royale.git"
+  },
+  "author": {
+    "name": "Benoît Grélard",
+    "email": "benoit.grelard@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/artisologic/battle-royale/issues"
+  },
+  "homepage": "https://github.com/artisologic/battle-royale#readme"
 }

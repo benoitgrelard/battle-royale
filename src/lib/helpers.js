@@ -1,23 +1,20 @@
-export function $ (selector) {
+export function $(selector) {
 	return document.querySelectorAll(selector);
 }
 
-export function getRandomInt (min, max) {
+export function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min)) + min;
 }
 
-export function getRandomBoolean () {
+export function getRandomBoolean() {
 	return Math.random() < 0.5;
 }
 
-export function log3d (rootObject) {
-
-	logLevel(rootObject);
-
-
-	function logLevel (object) {
-		let hasChildren = object.children.length;
-		let log = `[${object.type}]${object.name ? ' ' + object.name : ''}`;
+export function log3d(rootObject) {
+	function logLevel(object) {
+		const hasChildren = object.children.length;
+		const name = object.name ? ` ${object.name}` : '';
+		const log = `[${object.type}]${name}`;
 
 		if (hasChildren) {
 			window.console.groupCollapsed(log);
@@ -31,4 +28,6 @@ export function log3d (rootObject) {
 			window.console.groupEnd(log);
 		}
 	}
+
+	logLevel(rootObject);
 }
