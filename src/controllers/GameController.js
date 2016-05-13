@@ -17,10 +17,10 @@ export default class GameController {
 		this.model = model;
 		this.view = view;
 		this.ai = new AI(this.model.boardSize);
-		this.verbose = false;
+		this.verbose = true;
 
 		// delay initial turn
-		setTimeout(() => this.start(), 2000);
+		setTimeout(() => this.start(), 0);
 
 		// view events
 		this.view.on(VIEW_EVENT__SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));
@@ -81,7 +81,7 @@ export default class GameController {
 		if (!humanPlayerIsSunk && !computerPlayerIsSunk) { return false; }
 
 		const winner = humanPlayerIsSunk ? this.model.computerPlayer : this.model.humanPlayer;
-		window.console.log(`${winner}.name wins!`);
+		window.console.log(`${winner.name} wins!`);
 
 		this.model.humanPlayer.isActive = false;
 		this.model.computerPlayer.isActive = false;

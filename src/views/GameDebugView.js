@@ -8,6 +8,8 @@ import {
 	CELL_MISSED
 } from '../constants';
 
+import './GameDebugView.scss';
+
 
 /**
  * @class GameDebugView
