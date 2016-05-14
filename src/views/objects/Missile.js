@@ -5,45 +5,34 @@ import { TILE_HEIGHT } from './Tile';
 
 
 export const MISSILE_SIZE = 0.3;
+
 export const MISSILE_HEIGHT = 0.75;
+
 export const MISSILE_PRE_DROP_HEIGHT = 3;
+
 export const MISSILE_DROP_HEIGHT = 5;
 
-function getBodyGeometry() {
-	return new THREE.CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
-}
+export const MISSILE_BODY_GEOMETRY =
+	new THREE.CylinderGeometry(MISSILE_SIZE, 0, MISSILE_HEIGHT, 3, 1);
 
-function getBodyMaterial() {
-	return new THREE.MeshLambertMaterial({
-		color: 0x00ff88,
-		emissive: 0x008822,
-		shading: THREE.FlatShading,
-		transparent: true
-	});
-}
+export const MISSILE_BODY_MATERIAL = new THREE.MeshLambertMaterial({
+	color: 0x00ff88,
+	emissive: 0x008822,
+	shading: THREE.FlatShading,
+	transparent: true
+});
 
-function getTrailGeometry() {
-	const lineGeometry = new THREE.Geometry();
-	lineGeometry.vertices.push(
-		new THREE.Vector3(0, 100, 0),
-		new THREE.Vector3(0, -100, 0)
-	);
+export const MISSILE_TRAIL_GEOMETRY = new THREE.Geometry();
+MISSILE_TRAIL_GEOMETRY.vertices.push(
+	new THREE.Vector3(0, 100, 0),
+	new THREE.Vector3(0, -100, 0)
+);
 
-	return lineGeometry;
-}
-
-function getTrailMaterial() {
-	return new THREE.LineBasicMaterial({
-		color: 'green',
-		transparent: true,
-		opacity: 0.5
-	});
-}
-
-export const MISSILE_BODY_GEOMETRY = getBodyGeometry();
-export const MISSILE_BODY_MATERIAL = getBodyMaterial();
-export const MISSILE_TRAIL_GEOMETRY = getTrailGeometry();
-export const MISSILE_TRAIL_MATERIAL = getTrailMaterial();
+export const MISSILE_TRAIL_MATERIAL = new THREE.LineBasicMaterial({
+	color: 'green',
+	transparent: true,
+	opacity: 0.5
+});
 
 /**
  * @class Missile

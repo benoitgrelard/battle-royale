@@ -6,50 +6,47 @@ import EventEmitter from './EventEmitter';
  */
 export default class Model extends EventEmitter {
 
-	constructor(attributes) {
+	constructor(props) {
 		super();
 
-		this._$createGettersAndSetters(attributes);
+		this._props = props;
+		this._createGettersAndSetters();
 	}
 
-	_$createGettersAndSetters(attributes) {
-		/* eslint-disable guard-for-in, no-restricted-syntax */
-		for (const attributeKey in attributes) {
-		/* eslint-enable guard-for-in */
+	_createGettersAndSetters() {
+		Object.keys(this._props).forEach(propKey => {
+			Object.defineProperty(this, propKey, {
 
-			Object.defineProperty(this, attributeKey, {
 				get() {
-					return attributes[attributeKey];
+					return this._props[propKey];
 				},
-				set(value) {
-					const oldValue = this[attributeKey];
 
-					if (!this._$attributeHasChanged(value, oldValue)) { return this; }
+				set(value) {
+					const oldValue = this._props[propKey];
+
+					if (!this._propHasChanged(value, oldValue)) { return this; }
 
 					// set value
-					attributes[attributeKey] = value; // eslint-disable-line
+					this._props[propKey] = value;
 
 					// emit change events
 					const eventPayload = {
 						newValue: value,
 						oldValue,
-						attribute: attributeKey
+						prop: propKey
 					};
-					this
-						.emit('changed', eventPayload)
-						.emit(`changed:${attributeKey}`, eventPayload);
+
+					this.emit('changed', eventPayload);
+					this.emit(`changed:${propKey}`, eventPayload);
 
 					return this;
 				}
-			});
 
-			// set initial value
-			const attributeValue = attributes[attributeKey];
-			this[attributeKey] = attributeValue;
-		}
+			});
+		});
 	}
 
-	_$attributeHasChanged(value, oldValue) {
+	_propHasChanged(value, oldValue) {
 		// TODO: will only work for primitives or references
 		return value !== oldValue;
 	}

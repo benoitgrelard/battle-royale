@@ -7,12 +7,14 @@ import ShipPart from './ShipPart';
  */
 export default class Ship extends Model {
 
-	constructor(attributes) {
-		super(Object.assign({
+	constructor(props) {
+		const finalProps = Object.assign({
 			name: 'Default Ship Name',
 			size: 0,
 			parts: []
-		}, attributes));
+		}, props);
+
+		super(finalProps);
 
 		this.parts = this.initParts(this, this.size);
 	}

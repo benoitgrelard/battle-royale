@@ -11,8 +11,8 @@ import { MODEL_EVENT__SHOT } from '../constants';
  */
 export default class Player extends Model {
 
-	constructor(attributes) {
-		super(Object.assign({
+	constructor(props) {
+		const finalProps = Object.assign({
 			name: 'Default Player Name',
 			type: null,
 			boardSize: DEFAULT_BOARD_SIZE,
@@ -26,7 +26,9 @@ export default class Player extends Model {
 			],
 			isActive: false,
 			canPlay: false
-		}, attributes));
+		}, props);
+
+		super(finalProps);
 
 		this.deployFleet();
 

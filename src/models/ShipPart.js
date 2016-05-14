@@ -9,11 +9,13 @@ export const INTACT = 'INTACT';
  */
 export default class ShipPart extends Model {
 
-	constructor(attributes) {
-		super(Object.assign({
+	constructor(props) {
+		const finalProps = Object.assign({
 			ship: null,
 			state: INTACT
-		}, attributes));
+		}, props);
+
+		super(finalProps);
 	}
 
 	getShip() {

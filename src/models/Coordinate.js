@@ -7,11 +7,13 @@ import { getRandomInt } from '../lib/helpers';
  */
 export default class Coordinate extends Model {
 
-	constructor(attributes) {
-		super(Object.assign({
+	constructor(props) {
+		const finalProps = Object.assign({
 			x: 0,
 			y: 0
-		}, attributes));
+		}, props);
+
+		super(finalProps);
 	}
 
 	toCode() {

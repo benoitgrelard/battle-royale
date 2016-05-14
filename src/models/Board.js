@@ -11,11 +11,13 @@ export const DEFAULT_BOARD_SIZE = 10;
  */
 export default class Board extends Model {
 
-	constructor(attributes) {
-		super(Object.assign({
+	constructor(props) {
+		const finalProps = Object.assign({
 			size: DEFAULT_BOARD_SIZE,
 			grid: []
-		}, attributes));
+		}, props);
+
+		super(finalProps);
 
 		this.grid = this.initGrid(this.size);
 	}

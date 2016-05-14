@@ -8,8 +8,8 @@ import { DEFAULT_BOARD_SIZE } from './Board';
  */
 export default class Game extends Model {
 
-	constructor(attributes) {
-		super(Object.assign({
+	constructor(props) {
+		const finalProps = Object.assign({
 			humanPlayer: new Player({
 				name: 'Neo',
 				type: 'human'
@@ -19,7 +19,9 @@ export default class Game extends Model {
 				type: 'computer'
 			}),
 			boardSize: DEFAULT_BOARD_SIZE
-		}, attributes));
+		}, props);
+
+		super(finalProps);
 	}
 
 }

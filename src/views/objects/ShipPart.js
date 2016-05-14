@@ -4,58 +4,47 @@ import { ANIMATION_SPEED_FACTOR } from '../../constants';
 
 
 export const SHIP_PART_SIZE = 0.75;
+
 export const SHIP_PART_LIGHT_INTENSITY = 3;
+
 export const HIT_SHIP_PART_LIGHT_COLOR = new THREE.Color('red');
 
-function getBodyGeometry() {
-	return new THREE.IcosahedronGeometry(SHIP_PART_SIZE / 2, 1);
-}
+export const SHIP_PART_BODY_GEOMETRY = new THREE.IcosahedronGeometry(SHIP_PART_SIZE / 2, 1);
 
-function getBodyMaterials() {
-	return {
-		default: new THREE.MeshPhongMaterial({
-			color: 'white',
-			emissive: 'rgb(5, 1, 4)',
-			specular: 'rgb(190,190,190)',
-			shininess: 40,
-			shading: THREE.FlatShading
-		}),
+export const SHIP_PART_BODY_MATERIALS = {
+	default: new THREE.MeshPhongMaterial({
+		color: 'white',
+		emissive: 'rgb(5, 1, 4)',
+		specular: 'rgb(190,190,190)',
+		shininess: 40,
+		shading: THREE.FlatShading
+	}),
 
-		hit: new THREE.MeshPhongMaterial({
-			color: 'red',
-			emissive: 'rgb(40, 8, 30)',
-			specular: 'rgb(190,190,190)',
-			shininess: 40,
-			shading: THREE.FlatShading
-		}),
+	hit: new THREE.MeshPhongMaterial({
+		color: 'red',
+		emissive: 'rgb(40, 8, 30)',
+		specular: 'rgb(190,190,190)',
+		shininess: 40,
+		shading: THREE.FlatShading
+	}),
 
-		sunk: new THREE.MeshPhongMaterial({
-			color: 0x111111,
-			emissive: 'rgb(5, 1, 4)',
-			specular: 'rgb(50,50,50)',
-			shininess: 40,
-			shading: THREE.FlatShading
-		})
-	};
-}
+	sunk: new THREE.MeshPhongMaterial({
+		color: 0x111111,
+		emissive: 'rgb(5, 1, 4)',
+		specular: 'rgb(50,50,50)',
+		shininess: 40,
+		shading: THREE.FlatShading
+	})
+};
 
-function getShipPartShadowGeometry() {
-	return new THREE.CircleGeometry(SHIP_PART_SIZE / 2 * 0.9, 12);
-}
+export const SHIP_PART_SHADOW_GEOMETRY = new THREE.CircleGeometry(SHIP_PART_SIZE / 2 * 0.9, 12);
 
-function getShipPartShadowMaterial() {
-	return new THREE.MeshLambertMaterial({
-		color: 'black',
-		shading: THREE.FlatShading,
-		transparent: true,
-		opacity: 0.45
-	});
-}
-
-export const SHIP_PART_BODY_GEOMETRY = getBodyGeometry();
-export const SHIP_PART_BODY_MATERIALS = getBodyMaterials();
-export const SHIP_PART_SHADOW_GEOMETRY = getShipPartShadowGeometry();
-export const SHIP_PART_SHADOW_MATERIAL = getShipPartShadowMaterial();
+export const SHIP_PART_SHADOW_MATERIAL = new THREE.MeshLambertMaterial({
+	color: 'black',
+	shading: THREE.FlatShading,
+	transparent: true,
+	opacity: 0.45
+});
 
 /**
  * @class ShipPart
