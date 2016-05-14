@@ -6,14 +6,13 @@ import { getRandomBoolean } from '../lib/helpers';
 import { MODEL_EVENT__SHOT } from '../constants';
 
 
-
 /**
  * @class Player
  */
 export default class Player extends Model {
 
-	constructor (attributes) {
-		super(Object.assign({
+	constructor(props) {
+		const finalProps = Object.assign({
 			name: 'Default Player Name',
 			type: null,
 			boardSize: DEFAULT_BOARD_SIZE,
@@ -27,7 +26,9 @@ export default class Player extends Model {
 			],
 			isActive: false,
 			canPlay: false
-		}, attributes));
+		}, props);
+
+		super(finalProps);
 
 		this.deployFleet();
 
@@ -35,29 +36,29 @@ export default class Player extends Model {
 		this.board.on(MODEL_EVENT__SHOT, this.proxy.bind(this));
 	}
 
-	deployFleet () {
+	deployFleet() {
 		this.fleet.forEach(this.deployShip.bind(this));
 	}
 
-	deployShip (ship) {
+	deployShip(ship) {
 		let isDeployed = false;
 		let startCoordinate = null;
 		let direction = null;
 
 		do {
-
 			startCoordinate = Coordinate.random(this.boardSize);
 			direction = getRandomBoolean() ? 'x' : 'y';
 			isDeployed = this.board.deployShip(ship, startCoordinate, direction);
-
-		} while(isDeployed === false);
+		} while (
+			isDeployed === false
+		);
 	}
 
-	isSunk () {
+	isSunk() {
 		return this.fleet.every(ship => ship.isSunk());
 	}
 
-	takeHit (coordinate) {
+	takeHit(coordinate) {
 		if (this.isActive) { return null; }
 		return this.board.takeHit(coordinate);
 	}

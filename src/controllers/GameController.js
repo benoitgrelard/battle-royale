@@ -8,13 +8,12 @@ import {
 } from '../constants';
 
 
-
 /**
  * @class GameController
  */
 export default class GameController {
 
-	constructor (model, view) {
+	constructor(model, view) {
 		this.model = model;
 		this.view = view;
 		this.ai = new AI(this.model.boardSize);
@@ -33,55 +32,56 @@ export default class GameController {
 		this.model.computerPlayer.on(MODEL_EVENT__SHOT, this.onPlayerShot.bind(this));
 	}
 
-	start () {
+	start() {
 		this.giveTurnTo(this.model.humanPlayer);
 	}
 
-	onHumanPlayerRequestedShoot (eventName, data) {
-		let { x, y } = data.coordinate;
-		let coordinate = new Coordinate({ x, y });
+	onHumanPlayerRequestedShoot(eventName, data) {
+		const { x, y } = data.coordinate;
+		const coordinate = new Coordinate({ x, y });
 		this.model.computerPlayer.takeHit(coordinate);
 	}
 
-	onPlayerShot (eventName, data, player) {
+	onPlayerShot(eventName, data, player) {
 		if (this.verbose) { window.console.log(this.getInfoMessage(data, player)); }
-		let gameOver = this.checkWinner();
+		const gameOver = this.checkWinner();
 		if (gameOver) { return; }
 	}
 
-	onPlayerShotCompleted (eventName, data) {
+	onPlayerShotCompleted(eventName, data) {
 		this.giveTurnTo(data.player);
 	}
 
-	onBoardReady (eventName, data) {
+	onBoardReady(eventName, data) {
 		if (this.isComputer(data.player) && data.player.canPlay) {
-			let coordinate = this.ai.chooseCoordinate();
+			const coordinate = this.ai.chooseCoordinate();
 
 			setTimeout(() => {
-				let result = this.model.humanPlayer.takeHit(coordinate);
-				let { hit, sunk } = result;
+				const result = this.model.humanPlayer.takeHit(coordinate);
+				const { hit, sunk } = result;
 				this.ai.updateHitMapAtCoordinate(coordinate, hit, sunk);
 			}, CONST_AI_DELAY);
 		}
 	}
 
-	giveTurnTo (player) {
+	giveTurnTo(player) {
 		if (this.verbose) { window.console.log(`${player.name}’s turn!`); }
 		this.getOpponent(player).isActive = false;
-		player.isActive = true;
+		player.isActive = true; // eslint-disable-line no-param-reassign
 	}
 
-	getOpponent (player) {
+	getOpponent(player) {
 		return this.isHuman(player) ? this.model.computerPlayer : this.model.humanPlayer;
 	}
 
-	checkWinner () {
-		let humanPlayerIsSunk = this.model.humanPlayer.isSunk();
-		let computerPlayerIsSunk = this.model.computerPlayer.isSunk();
+	checkWinner() {
+		const humanPlayerIsSunk = this.model.humanPlayer.isSunk();
+		const computerPlayerIsSunk = this.model.computerPlayer.isSunk();
 
 		if (!humanPlayerIsSunk && !computerPlayerIsSunk) { return false; }
 
-		window.console.log((humanPlayerIsSunk ? this.model.computerPlayer : this.model.humanPlayer).name + ' wins!');
+		const winner = humanPlayerIsSunk ? this.model.computerPlayer : this.model.humanPlayer;
+		window.console.log(`${winner.name} wins!`);
 
 		this.model.humanPlayer.isActive = false;
 		this.model.computerPlayer.isActive = false;
@@ -89,13 +89,14 @@ export default class GameController {
 		return true;
 	}
 
-	getInfoMessage (data, player) {
-		let { hit, sunk, ship } = data;
-		let opponentName = this.getOpponent(player).name;
+	getInfoMessage(data, player) {
+		const { hit, sunk, ship } = data;
+		const opponentName = this.getOpponent(player).name;
 		let message = '';
 
 		if (hit) {
-			message = `${opponentName} ${sunk ? 'sunk' : hit ? 'hit' : ''} ${player.name}’s ${ship.name}!`;
+			const action = sunk ? 'sunk' : 'hit';
+			message = `${opponentName} ${action} ${player.name}’s ${ship.name}!`;
 		} else {
 			message = `${opponentName} missed!`;
 		}
@@ -103,11 +104,11 @@ export default class GameController {
 		return message;
 	}
 
-	isHuman (player) {
+	isHuman(player) {
 		return player === this.model.humanPlayer;
 	}
 
-	isComputer (player) {
+	isComputer(player) {
 		return player === this.model.computerPlayer;
 	}
 

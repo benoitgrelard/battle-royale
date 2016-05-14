@@ -1,54 +1,52 @@
 import EventEmitter from './EventEmitter';
 
 
-
 /**
  * @class Model
  */
 export default class Model extends EventEmitter {
 
-	constructor (attributes) {
+	constructor(props) {
 		super();
 
-		this._$createGettersAndSetters(attributes);
+		this._props = props;
+		this._createGettersAndSetters();
 	}
 
-	_$createGettersAndSetters (attributes) {
-		for (let attributeKey in attributes) {
+	_createGettersAndSetters() {
+		Object.keys(this._props).forEach(propKey => {
+			Object.defineProperty(this, propKey, {
 
-			Object.defineProperty(this, attributeKey, {
-				get: function() {
-					return attributes[attributeKey];
+				get() {
+					return this._props[propKey];
 				},
-				set: function(value) {
-					let oldValue = this[attributeKey];
 
-					if (!this._$attributeHasChanged(value, oldValue)) { return this; }
+				set(value) {
+					const oldValue = this._props[propKey];
+
+					if (!this._propHasChanged(value, oldValue)) { return this; }
 
 					// set value
-					attributes[attributeKey] = value;
+					this._props[propKey] = value;
 
 					// emit change events
-					let eventPayload = {
+					const eventPayload = {
 						newValue: value,
 						oldValue,
-						attribute: attributeKey
+						prop: propKey
 					};
-					this
-						.emit('changed', eventPayload)
-						.emit(`changed:${attributeKey}`, eventPayload);
+
+					this.emit('changed', eventPayload);
+					this.emit(`changed:${propKey}`, eventPayload);
 
 					return this;
 				}
-			});
 
-			// set initial value
-			let attributeValue = attributes[attributeKey];
-			this[attributeKey] = attributeValue;
-		}
+			});
+		});
 	}
 
-	_$attributeHasChanged (value, oldValue) {
+	_propHasChanged(value, oldValue) {
 		// TODO: will only work for primitives or references
 		return value !== oldValue;
 	}

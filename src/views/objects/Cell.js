@@ -2,20 +2,19 @@ import THREE from 'three';
 import CellSide from './CellSide';
 
 
-
 /**
  * @class Cell
  */
 export default class Cell extends THREE.Group {
 
-	constructor (gameModel, coordinate) {
+	constructor(gameModel, coordinate) {
 		super();
 
 		this.name = 'cellPivot';
 
 		this.cell = new THREE.Group();
 		this.cell.name = 'cell';
-		let { x, y } = coordinate;
+		const { x, y } = coordinate;
 		this.cell.userData = { x, y };
 
 		this.humanSide = new CellSide(gameModel.humanPlayer, coordinate);
@@ -26,7 +25,7 @@ export default class Cell extends THREE.Group {
 		this.add(this.cell);
 	}
 
-	getSide (player) {
+	getSide(player) {
 		return player.type === 'human' ? this.humanSide : this.computerSide;
 	}
 

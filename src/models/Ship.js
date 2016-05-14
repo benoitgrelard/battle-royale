@@ -2,43 +2,44 @@ import Model from '../lib/Model';
 import ShipPart from './ShipPart';
 
 
-
 /**
  * @class Ship
  */
 export default class Ship extends Model {
 
-	constructor (attributes) {
-		super(Object.assign({
+	constructor(props) {
+		const finalProps = Object.assign({
 			name: 'Default Ship Name',
 			size: 0,
 			parts: []
-		}, attributes));
+		}, props);
 
-		this.parts = initParts(this, this.size);
+		super(finalProps);
 
-		function initParts(ship, size) {
-			let parts = [];
-			for (let i = 0; i < size; i++) {
-				parts[i] = new ShipPart({ ship });
-			}
-			return parts;
-		}
+		this.parts = this.initParts(this, this.size);
 	}
 
-	getPartAtIndex (index) {
+	initParts(ship, size) {
+		const parts = [];
+		for (let i = 0; i < size; i++) {
+			parts[i] = new ShipPart({ ship });
+		}
+		return parts;
+	}
+
+	getPartAtIndex(index) {
 		return this.parts[index];
 	}
 
-	isIntact () {
+	isIntact() {
 		return this.parts.every(part => part.isIntact());
 	}
 
-	isHit () {
+	isHit() {
 		return this.parts.some(part => part.isHit());
 	}
 
-	isSunk () {
+	isSunk() {
 		return this.parts.every(part => part.isHit());
 	}
 
