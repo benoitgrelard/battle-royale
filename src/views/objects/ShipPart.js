@@ -111,7 +111,7 @@ export default class ShipPart extends THREE.Group {
 		const downDuration = 400;
 
 		const tweenUp = new TWEEN.Tween(this.bodyWrapper.position)
-			.to({ y: String(relativeUp) }, upDuration / ANIMATION_SPEED_FACTOR)
+			.to({ y: `+${relativeUp}` }, upDuration / ANIMATION_SPEED_FACTOR)
 			.easing(TWEEN.Easing.Sinusoidal.Out)
 			.delay(upDelay / ANIMATION_SPEED_FACTOR)
 			.onStart(() => {
@@ -123,7 +123,7 @@ export default class ShipPart extends THREE.Group {
 			});
 
 		const tweenDown = new TWEEN.Tween(this.bodyWrapper.position)
-			.to({ y: String(-relativeDown) }, downDuration / ANIMATION_SPEED_FACTOR)
+			.to({ y: `-${relativeDown}` }, downDuration / ANIMATION_SPEED_FACTOR)
 			.easing(TWEEN.Easing.Bounce.Out);
 
 		const tweenShadow = new TWEEN.Tween(this.shadow.scale)
