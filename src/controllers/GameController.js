@@ -17,10 +17,10 @@ export default class GameController {
 		this.model = model;
 		this.view = view;
 		this.ai = new AI(this.model.boardSize);
-		this.verbose = true;
+		this.verbose = false;
 
 		// delay initial turn
-		setTimeout(() => this.start(), 0);
+		setTimeout(() => this.start(), 2000);
 
 		// view events
 		this.view.on(VIEW_EVENT__SHOOT_REQUESTED, this.onHumanPlayerRequestedShoot.bind(this));
