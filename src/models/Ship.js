@@ -43,4 +43,8 @@ export default class Ship extends Model {
 		return this.parts.every(part => part.isHit());
 	}
 
+	getDamages() {
+		return this.parts.reduce((damages, part) => damages + (part.isHit() ? 1 : 0), 0);
+	}
+
 }

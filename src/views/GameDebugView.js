@@ -61,17 +61,21 @@ export default class GameDebugView extends View {
 
 	render() {
 		const humanPlayer = this.model.humanPlayer;
+		const humanPlayerScore = this.model.computerPlayer.getDamages();
+
 		const computerPlayer = this.model.computerPlayer;
+		const computerPlayerScore = this.model.humanPlayer.getDamages();
+
 		const showShips = true;
 
 		const output = `
 			<div class="Player -human">
-				<h1>${humanPlayer.name}</h1>
+				<h1>${humanPlayer.name} (${humanPlayerScore})</h1>
 				${this.renderBoard(humanPlayer, showShips)}
 			</div>
 
 			<div class="Player -computer">
-				<h1>${computerPlayer.name}</h1>
+				<h1>${computerPlayer.name} (${computerPlayerScore})</h1>
 				${this.renderBoard(computerPlayer)}
 			</div>
 		`;
