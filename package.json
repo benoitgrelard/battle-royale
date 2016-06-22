@@ -9,6 +9,7 @@
     "prebuild": "npm test && npm run clean",
     "build": "NODE_ENV=production webpack --progress --colors",
     "clean": "rimraf ./build && echo Cleaned up ./build",
+    "predev": "open http://localhost:8080",
     "dev": "webpack-dev-server --progress --colors --inline --hot",
     "lint": "eslint ./src && echo No linting errors."
   },
