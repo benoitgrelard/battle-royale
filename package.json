@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "license": "UNLICENSED",
   "scripts": {
+    "prestart": "npm install",
     "start": "NODE_ENV=development npm run dev",
     "test": "npm run lint",
-    "prebuild": "npm run clean",
+    "prebuild": "npm test && npm run clean",
     "build": "NODE_ENV=production webpack --progress --colors",
     "clean": "rimraf ./build && echo Cleaned up ./build",
     "dev": "webpack-dev-server --progress --colors --inline --hot",

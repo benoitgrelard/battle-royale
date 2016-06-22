@@ -1,7 +1,11 @@
-#battle-royale
+# battle-royale
 
+## Start dev'ing
 ```bash
-npm install -g gulp
-npm install
-gulp
+npm start
+```
+
+## Build
+```bash
+npm run build
 ```
