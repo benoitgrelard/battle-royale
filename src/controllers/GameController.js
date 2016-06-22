@@ -43,10 +43,9 @@ export default class GameController {
 	}
 
 	onPlayerShot(eventName, data, player) {
-		console.log(`
-			${this.model.humanPlayer.name}: ${this.model.computerPlayer.getDamages()}
-			${this.model.computerPlayer.name}: ${this.model.humanPlayer.getDamages()}
-		`);
+		window.console.log(`${this.model.humanPlayer.name}: ${this.model.computerPlayer.getDamages()}`);
+		window.console.log(`${this.model.computerPlayer.name}: ${this.model.humanPlayer.getDamages()}`);
+
 		if (this.verbose) { window.console.log(this.getInfoMessage(data, player)); }
 		const gameOver = this.checkWinner();
 		if (gameOver) { return; }
