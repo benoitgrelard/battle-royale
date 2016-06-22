@@ -63,4 +63,8 @@ export default class Player extends Model {
 		return this.board.takeHit(coordinate);
 	}
 
+	getDamages() {
+		return this.fleet.reduce((totalDamages, ship) => totalDamages + ship.getDamages(), 0);
+	}
+
 }
