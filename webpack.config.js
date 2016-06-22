@@ -49,9 +49,7 @@ if (isProd) {
 
 // final config
 module.exports = {
-	entry: {
-		app: [appPath]
-	},
+	entry: appPath,
 	output: {
 		path: path.resolve(__dirname, 'build'),
 		publicPath: '/',
